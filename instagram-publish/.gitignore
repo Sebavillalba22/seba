@@ -1,0 +1,5 @@
+# Tokens secretos — NUNCA commitear (ver *.example.json para el formato)
+instagram.json
+.credentials.json
+__pycache__/
+*.pyc
