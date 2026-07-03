@@ -137,6 +137,27 @@ def check(page_id: str, token: str) -> None:
     print(json.dumps({"ok": True, "page": info}, ensure_ascii=False, indent=2))
 
 
+def post_status(post_id: str, token: str) -> None:
+    """Diagnóstico de un post: ¿existe? ¿está publicado/oculto/restringido?
+    Si la Graph API responde 'does not exist', Facebook lo eliminó (spam,
+    integridad o contenido duplicado)."""
+    fields = ("id,is_published,is_hidden,is_expired,created_time,permalink_url,"
+              "privacy,status_type,message,scheduled_publish_time,"
+              "attachments{media_type,subattachments}")
+    info = _get(f"{GRAPH}/{post_id}?fields={urllib.parse.quote(fields)}"
+                f"&access_token={urllib.parse.quote(token)}")
+    print(json.dumps({"ok": True, "post": info}, ensure_ascii=False, indent=2))
+
+
+def list_feed(page_id: str, token: str, limit: int = 10) -> None:
+    """Últimos posts del feed de la página, para ver qué está visible."""
+    fields = "id,created_time,is_published,is_hidden,permalink_url,status_type,message"
+    info = _get(f"{GRAPH}/{page_id}/feed?limit={limit}"
+                f"&fields={urllib.parse.quote(fields)}"
+                f"&access_token={urllib.parse.quote(token)}")
+    print(json.dumps({"ok": True, "feed": info.get("data", info)}, ensure_ascii=False, indent=2))
+
+
 def comment_on_post(post_id: str, token: str, text: str) -> dict:
     """Agrega un comentario a un post de la página (requiere pages_manage_engagement)."""
     return _post_urlencoded(
@@ -227,11 +248,19 @@ def main() -> None:
     ap.add_argument("--token", help="Override del Page Access Token.")
     ap.add_argument("--check", action="store_true", help="Verificar credenciales y salir.")
     ap.add_argument("--first-comment", help="Texto/link a dejar como primer comentario del post.")
+    ap.add_argument("--post-status", metavar="POST_ID",
+                    help="Diagnóstico de un post (¿existe? ¿publicado? ¿oculto?) y salir.")
+    ap.add_argument("--list-feed", action="store_true",
+                    help="Listar los últimos 10 posts del feed de la página y salir.")
     args = ap.parse_args()
 
     page_id, token = load_credentials(args.page_id, args.token)
     if args.check:
         check(page_id, token)
+    elif args.post_status:
+        post_status(args.post_status, token)
+    elif args.list_feed:
+        list_feed(page_id, token)
     else:
         publish(page_id, token, args.message, args.image, args.link,
                 first_comment=args.first_comment)
