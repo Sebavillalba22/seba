@@ -1,0 +1,74 @@
+==========================================================
+ POSTEAR UN CARRUSEL EN INSTAGRAM (@estacionline) DESDE WINDOWS
+==========================================================
+
+IMPORTANTE: para POSTEAR no hace falta el sandbox Linux de Cowork
+(eso solo se usa para GENERAR las slides con Playwright). Acá publicás
+directo con Python + la API de Instagram. Las credenciales ya están
+en instagram.json (dentro de esta carpeta).
+
+----------------------------------------------------------
+PASO 0 — Una sola vez
+----------------------------------------------------------
+1. Tener Python 3 instalado (python.org, tildar "Add python.exe to PATH").
+2. Descomprimir esta carpeta, por ej. en:  C:\estacionline\facebook-publish\
+3. Probar que las credenciales andan:
+       cd C:\estacionline\facebook-publish
+       python scripts\ig_publish.py --check
+   Debe mostrar @estacionline y la cantidad de seguidores.
+
+----------------------------------------------------------
+PASO 1 — Subir las slides (imágenes) a una URL pública
+----------------------------------------------------------
+Instagram NO acepta archivos locales: necesita un LINK público.
+- Entrá a estacionline.com/wp-admin -> Medios -> Añadir nuevo.
+- Subí cada slide del carrusel (1080x1350 ideal).
+- Copiá la "URL del archivo" de cada una (termina en .jpg o .png).
+  Anotá las URLs EN ORDEN (slide 1, 2, 3, ...). De 2 a 10 imágenes.
+
+----------------------------------------------------------
+PASO 2 — Postear el carrusel
+----------------------------------------------------------
+Reemplazá el epígrafe y las URLs por las tuyas, en orden:
+
+   python scripts\ig_publish.py --caption "Tu epigrafe aca (link en bio)" ^
+     --image "https://estacionline.com/wp-content/uploads/.../slide1.jpg" ^
+     --image "https://estacionline.com/wp-content/uploads/.../slide2.jpg" ^
+     --image "https://estacionline.com/wp-content/uploads/.../slide3.jpg"
+
+(El ^ al final de cada línea es para cortar el comando en varias líneas en
+ CMD de Windows. Si te complica, escribí todo en UNA sola línea.)
+
+Para PROBAR sin publicar (arma el carrusel y verifica, NO postea):
+   python scripts\ig_publish.py --dry-run --caption "x" --image "URL1" --image "URL2"
+
+Para publicar en IG y REPOSTEAR en la página de Facebook en el mismo
+comando (un solo posteo con las fotos, SIN álbum), agregá --repost-fb:
+   python scripts\ig_publish.py --caption "..." --image "URL1" --image "URL2" --repost-fb
+
+----------------------------------------------------------
+PASO 3 (opcional) — Repostear en Facebook un carrusel que YA está en IG
+----------------------------------------------------------
+   python scripts\fb_repost_ig.py --latest
+     (repostea el ultimo post de IG en la pagina, con el mismo caption)
+
+   python scripts\fb_repost_ig.py --permalink "https://www.instagram.com/p/ABC123/"
+     (por link del post)
+
+   python scripts\fb_repost_ig.py --latest --dry-run
+     (muestra que publicaria, sin publicar)
+
+Es UN solo posteo de feed con las fotos adjuntas: en el celular se
+deslizan de a una, como el crosspost automatico del telefono. NO crea
+ningun album. (La unica diferencia con el crosspost del telefono es el
+preview del feed: mosaico en vez de puntitos — eso no se puede via API.)
+
+----------------------------------------------------------
+NOTAS
+----------------------------------------------------------
+- En IG el link del epígrafe NO es clickeable: usar "link en bio".
+- Las 1080x1350 (4:5) son el formato ideal del carrusel.
+- Si querés generar las slides y el sandbox de Cowork sigue caído,
+  reiniciá la app de Cowork; pero el POSTEO (este archivo) funciona igual
+  sin sandbox.
+==========================================================

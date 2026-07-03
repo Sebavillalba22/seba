@@ -1,0 +1,49 @@
+[
+  {
+    "label": "Embody Fitness",
+    "days": ["thu", "sat"],
+    "time": "05:00",
+    "media_type": "video",
+    "media": [
+      "https://estacionline.com/wp-content/uploads/2026/06/IMG_9794.mp4",
+      "https://estacionline.com/wp-content/uploads/2026/06/IMG_9793.mp4"
+    ]
+  },
+  {
+    "label": "Agua Vitalidad",
+    "days": ["tue", "fri"],
+    "time": "09:00",
+    "media_type": "video",
+    "media": [
+      "https://estacionline.com/wp-content/uploads/2026/06/IMG_9437.mp4"
+    ]
+  },
+  {
+    "label": "Corralón Colombia",
+    "days": ["mon", "wed"],
+    "time": "13:00",
+    "media_type": "image",
+    "media": [
+      "https://estacionline.com/wp-content/uploads/2026/06/IMG_9064-scaled.jpg",
+      "https://estacionline.com/wp-content/uploads/2026/06/IMG_9065-scaled.jpg"
+    ]
+  },
+  {
+    "label": "Publicidad 4",
+    "days": ["thu", "sat"],
+    "time": "16:00",
+    "media_type": "video",
+    "media": [
+      "https://estacionline.com/wp-content/uploads/2026/06/Instagram-estacionline-stories-3920465059319144156.mp4"
+    ]
+  },
+  {
+    "label": "Publicidad 5",
+    "days": ["wed", "sat"],
+    "time": "21:00",
+    "media_type": "image",
+    "media": [
+      "https://estacionline.com/wp-content/uploads/2026/06/Captura-de-pantalla-2026-06-15-a-las-11.01.33-p.-m.png"
+    ]
+  }
+]

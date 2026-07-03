@@ -1,0 +1,61 @@
+==========================================================
+ facebook-publish — Instalación (Facebook + Instagram)
+==========================================================
+
+Publica en las páginas de Facebook (Estacionline, Estación Funes,
+Estación Roldán, Puerto Timbúes) y en Instagram (@estacionline)
+vía la Graph API de Meta. Solo necesita Python 3.
+
+----------------------------------------------------------
+INSTALAR COMO SKILL DE CLAUDE (para que Claude lo use)
+----------------------------------------------------------
+Copiá la carpeta "facebook-publish/" (esta, con scripts/ adentro y
+los .json al lado de SKILL.md) a la ruta de skills de Claude:
+
+  Windows:    C:\Users\TU_USUARIO\.claude\skills\facebook-publish\
+  Mac/Linux:  ~/.claude/skills/facebook-publish/
+
+Claude en esa máquina va a detectar el skill "facebook-publish".
+
+----------------------------------------------------------
+USAR LOS SCRIPTS A MANO (sin Claude)
+----------------------------------------------------------
+Da igual dónde pongas la carpeta: los scripts buscan las
+credenciales relativo a sí mismos. Entrá a la carpeta y:
+
+  Windows:    python scripts\publish.py --check
+  Mac/Linux:  python3 scripts/publish.py --check
+
+FACEBOOK:
+  python scripts/publish_to.py --list
+  python scripts/publish_to.py --page estacionline --message "Título
+
+  Bajada" --link "https://estacionline.com/..."
+  python scripts/publish_to.py --page funes   --message "..." --link "..."
+  python scripts/publish_to.py --page roldan  --message "..." --link "..."
+  python scripts/publish_to.py --page timbues --message "..." --link "..."
+
+INSTAGRAM (carrusel, imágenes en URL pública):
+  python scripts/ig_publish.py --check
+  python scripts/ig_publish.py --caption "Texto" \
+    --image "https://.../1.jpg" --image "https://.../2.jpg"
+  (--dry-run arma el container y verifica sin publicar)
+  (--repost-fb repostea el mismo post en la página de FB, sin álbum)
+
+REPOSTEAR EN FB UN POST QUE YA ESTÁ EN IG (un solo posteo, SIN álbum):
+  python scripts/fb_repost_ig.py --latest
+  python scripts/fb_repost_ig.py --permalink "https://www.instagram.com/p/..."
+
+Requisitos: Python 3. En Windows, instalá de python.org tildando
+"Add python.exe to PATH". No hace falta nada más.
+
+----------------------------------------------------------
+IMPORTANTE
+----------------------------------------------------------
+- Esta carpeta tiene .credentials.json, pages.json e instagram.json
+  con TOKENS SECRETOS que NO expiran. Mantenela privada: no la subas
+  a nube pública ni la commitees a git.
+- Es una copia. Si regenerás los tokens, volvé a copiar el zip a las
+  otras máquinas.
+- Ver README.md para el detalle completo.
+==========================================================
