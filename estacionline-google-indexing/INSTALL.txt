@@ -1,0 +1,53 @@
+==========================================================
+ estacionline-google-indexing — Instalación
+==========================================================
+
+Herramientas para diagnosticar y acelerar la indexación en Google
+(Search Console) de estacionline.com. Solo necesita Python 3 (stdlib).
+
+----------------------------------------------------------
+INSTALAR COMO SKILL DE CLAUDE (para que Claude la use)
+----------------------------------------------------------
+Copiá la carpeta "estacionline-google-indexing/" (esta, con scripts/
+adentro) a la ruta de skills de Claude:
+
+  Windows:    C:\Users\TU_USUARIO\.claude\skills\estacionline-google-indexing\
+  Mac/Linux:  ~/.claude/skills/estacionline-google-indexing\
+
+Claude en esa máquina va a detectar la skill "estacionline-google-indexing".
+
+----------------------------------------------------------
+USAR LOS SCRIPTS A MANO (sin Claude)
+----------------------------------------------------------
+Da igual dónde pongas la carpeta: los scripts buscan las credenciales
+relativo a sí mismos. Entrá a la carpeta y:
+
+SIN API (cero setup) — primera pasada:
+  python3 scripts/audit_urls.py --file urls.txt
+  python3 scripts/audit_urls.py --sitemap https://estacionline.com/sitemap.xml --limit 200
+  python3 scripts/sitemap_tools.py --list https://estacionline.com/sitemap.xml --out urls.txt
+  python3 scripts/sitemap_tools.py --from-robots https://estacionline.com
+
+CON API (Search Console, OAuth) — ver SETUP-OAUTH.txt primero:
+  python3 scripts/gsc_auth.py                                  # una vez
+  python3 scripts/gsc_inspect.py --file urls.txt               # estado real por URL
+  python3 scripts/gsc_sitemaps.py --list
+  python3 scripts/gsc_sitemaps.py --submit https://estacionline.com/sitemap.xml
+  python3 scripts/gsc_performance.py --by query --days 28
+  python3 scripts/gsc_performance.py --by page  --days 28
+
+En Windows usá "python" en vez de "python3".
+
+----------------------------------------------------------
+ARCHIVOS DE CONFIG (NO se commitean; ver .gitignore)
+----------------------------------------------------------
+  oauth_client.json   → el JSON de Google Cloud (formato en oauth_client.example.json)
+  .gsc_token.json     → lo genera gsc_auth.py (guarda el refresh_token)
+  urls.txt            → tu lista de URLs (formato en urls.example.txt)
+
+----------------------------------------------------------
+IMPORTANTE
+----------------------------------------------------------
+- La Indexing API de Google NO sirve para notas (Google la ignora): no está.
+- "Solicitar indexación" no tiene API: es a mano en Search Console.
+- Leé la tabla motivo→arreglo en SKILL.md para saber qué corregir en WordPress.

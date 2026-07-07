@@ -1,0 +1,7 @@
+# Lista de URLs a auditar / inspeccionar (una por línea).
+# Sacá estas URLs del drilldown de Search Console (botón Exportar) o del sitemap.
+# Las líneas que empiezan con # y lo que va después de # se ignoran.
+
+https://estacionline.com/una-nota-que-no-indexa/
+https://estacionline.com/otra-nota/
+https://estacionline.com/categoria/politica/nota-ejemplo/

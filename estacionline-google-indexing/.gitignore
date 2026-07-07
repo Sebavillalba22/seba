@@ -1,0 +1,13 @@
+# Credenciales y tokens — NUNCA commitear (ver *.example.json para el formato)
+oauth_client.json
+.gsc_token.json
+
+# Datos de trabajo locales
+urls.txt
+*.json
+!*.example.json
+reporte*.json
+estado*.json
+
+__pycache__/
+*.pyc

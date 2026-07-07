@@ -1,0 +1,77 @@
+==========================================================
+ Crear las credenciales OAuth para Search Console (10-15 min)
+==========================================================
+
+Objetivo: generar un "ID de cliente OAuth" tipo App de escritorio para que
+los scripts consulten la API de Search Console de estacionline.com con TU
+cuenta de Google (la que administra la propiedad). Las credenciales viven en
+tu cuenta; los scripts solo las usan localmente.
+
+NO hace falta service account (eso requiere firmar un JWT y una librería
+extra). Con OAuth de escritorio alcanza y es solo stdlib.
+
+----------------------------------------------------------
+PASO 1 — Proyecto en Google Cloud
+----------------------------------------------------------
+1. Entrá a https://console.cloud.google.com/  con la cuenta que administra
+   la propiedad de Search Console.
+2. Arriba, "Seleccionar proyecto" → "Proyecto nuevo" → nombre p. ej.
+   "estacionline-sc" → Crear. Dejalo seleccionado.
+
+----------------------------------------------------------
+PASO 2 — Habilitar la Search Console API
+----------------------------------------------------------
+1. Menú → "APIs y servicios" → "Biblioteca".
+2. Buscá "Google Search Console API" → Abrir → "Habilitar".
+
+----------------------------------------------------------
+PASO 3 — Pantalla de consentimiento OAuth
+----------------------------------------------------------
+1. "APIs y servicios" → "Pantalla de consentimiento de OAuth".
+2. Tipo de usuario: "Externo" → Crear.
+3. Completá nombre de la app (p. ej. "Estacionline SC"), tu email de soporte
+   y el email de contacto del desarrollador. Guardar y continuar.
+4. Scopes: podés dejarlo vacío (los pedimos desde el script). Continuar.
+5. "Usuarios de prueba" → Agregá TU dirección de Gmail (la que administra la
+   propiedad). Guardar. (Con la app en modo "Prueba" alcanza; no hace falta
+   publicarla ni verificarla.)
+
+----------------------------------------------------------
+PASO 4 — Crear el ID de cliente OAuth (App de escritorio)
+----------------------------------------------------------
+1. "APIs y servicios" → "Credenciales" → "Crear credenciales" →
+   "ID de cliente de OAuth".
+2. Tipo de aplicación: "App de escritorio". Nombre: el que quieras. Crear.
+3. En el cuadro que aparece → "Descargar JSON".
+4. Renombralo a  oauth_client.json  y ponelo AL LADO de SKILL.md
+   (en la carpeta estacionline-google-indexing/, NO dentro de scripts/).
+   El formato es el de oauth_client.example.json ({"installed": {...}}).
+
+----------------------------------------------------------
+PASO 5 — Autorizar (una sola vez)
+----------------------------------------------------------
+   cd estacionline-google-indexing
+   python3 scripts/gsc_auth.py
+
+- Se abre el navegador → elegí tu cuenta → puede aparecer "Google no ha
+  verificado esta app": clic en "Configuración avanzada" → "Ir a (la app)
+  (no seguro)" → "Permitir".
+- Al volver a la terminal vas a ver: refresh_token guardado en .gsc_token.json
+- Si estás en una máquina sin navegador:  python3 scripts/gsc_auth.py --manual
+
+----------------------------------------------------------
+PASO 6 — Probar
+----------------------------------------------------------
+   python3 scripts/gsc_sitemaps.py --list
+   python3 scripts/gsc_inspect.py https://estacionline.com/
+
+Si tu propiedad es de tipo DOMINIO (no de prefijo de URL), pasá:
+   --site sc-domain:estacionline.com   a cualquiera de los scripts gsc_*.
+
+----------------------------------------------------------
+NOTAS
+----------------------------------------------------------
+- El refresh_token puede caducar si la app queda en modo "Prueba" y pasan
+  ~7 días sin uso: si un script se queja, volvé a correr gsc_auth.py.
+- oauth_client.json y .gsc_token.json están en .gitignore: NUNCA se commitean.
+- Cupos: URL Inspection ~2000 URLs/día y 600/min por propiedad.
