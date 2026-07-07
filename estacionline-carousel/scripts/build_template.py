@@ -8,7 +8,9 @@ plan a la nota (cantidad, orden y tipos de slide) y completá el contenido.
 REGLAS:
 - NUNCA escribas HTML/CSS de slides a mano — solo llamadas a c.slide_*().
 - Cualquier cantidad de slides vale (3, 5, 7, 10): agregá o quitá llamadas.
-- <span class="accent">…</span> aplica el gradiente de la paleta en títulos.
+- <span class="accent">…</span> = gradiente de paleta en títulos.
+- <b>…</b> = resaltado blanco en cuerpos de texto.
+- Comillas tipográficas " ", nunca rectas.
 """
 import sys
 from pathlib import Path
@@ -19,63 +21,65 @@ import carousel as c
 
 WORK_DIR = '/home/claude/my_carrusel'
 
-# Paleta: violaceo | verde | rosa | acero | atardecer | ocre
+# Paleta: violaceo | verde | rosa | acero | celeste | atardecer | ocre
 c.use_palette('violaceo')
 
 # Fotos procesadas con process_photos.py (paths a los *_b64.txt)
 FOTO_COVER = c.photo(f'{WORK_DIR}/cover_b64.txt')
-FOTO_SLIDE3 = c.photo(f'{WORK_DIR}/slide3_b64.txt')
-FOTO_SLIDE5 = c.photo(f'{WORK_DIR}/slide5_b64.txt')
+FOTO_SLIDE4 = c.photo(f'{WORK_DIR}/slide4_b64.txt')
 
 # Plan de slides — típico de 7, pero usá las que pida la nota
 slides = [
     c.slide_cover(
         FOTO_COVER,
         eyebrow='Sección de la nota',
-        title='Título principal,<br><span class="accent">en dos líneas</span>.',
-        sub='Subtítulo que resume la nota en una oración.',
-        obj_pos='center 30%',
+        title='Título con la parte clave <span class="accent">"en acento"</span> y remate',
+        sub='Bajada que resume la nota en una oración.',
+        obj_pos='center 30%',          # ajustar para encuadrar la cara
+        credit='Foto: @fotografo',
+    ),
+    c.slide_text(
+        eyebrow='El contexto',
+        title='Desarrollo del tema <span class="accent">sin foto</span>',
+        body='Cuerpo con los hechos. Nombres y datos en <b>negrita</b>, citas cortas "entre comillas".',
+        quote='"Cita textual complementaria en color de la paleta."',
     ),
     c.slide_quote(
-        text='"Cita textual del protagonista <span class="accent">con énfasis</span>."',
+        text='"Cita textual protagonista del carousel."',
         name='Nombre Apellido',
         role='Cargo o descripción',
     ),
-    c.slide_photo_text(
-        FOTO_SLIDE3,
-        eyebrow='El comienzo',
-        title='Título <span class="accent">corto</span> y potente.',
-        bajada='Bajada que da contexto sobre lo que muestra la foto.',
-        obj_pos='center 25%',      # ajustar para mostrar la cara del sujeto
-        text_pos='bottom',         # 'top' si la cara está en la mitad inferior
-    ),
     c.slide_number(
-        eyebrow='Los números',
-        number='53',               # LITERAL de la nota — nunca inventado
-        unit='unidades',
-        desc='Descripción del número con contexto.',
+        eyebrow='En una sola palabra',   # o 'Los números'
+        number='Épica',                  # LITERAL de la nota — número o palabra
+        desc='Contexto del dato con <b>resaltados</b>.',
+        # unit='años',                   # opcional, solo para números
     ),
     c.slide_photo_text(
-        FOTO_SLIDE5,
+        FOTO_SLIDE4,
         eyebrow='El detalle',
-        title='Otro título <span class="accent">destacado</span>.',
-        bajada='Bajada de la segunda foto.',
+        title='Otro título <span class="accent">destacado</span>',
+        bajada='Bajada que da contexto sobre lo que muestra la foto.',
+        obj_pos='center 25%',
+        text_pos='bottom',               # 'top' si la cara está abajo
+        credit='Foto: @fotografo',
     ),
     c.slide_list(
-        eyebrow='Distribución',
-        title='Lista <span class="accent">por categoría</span>.',
+        eyebrow='Qué incluye',
+        title='Los puntos <span class="accent">clave</span>',
         items=[
-            ('Primer ítem', 'Descripción del primer ítem.'),
-            ('Segundo ítem', 'Descripción del segundo ítem.'),
-            ('Tercer ítem', 'Descripción del tercer ítem.'),
+            ('Primer ítem', 'Descripción corta.'),
+            ('Segundo ítem', ''),
+            ('Tercer ítem', ''),
         ],
-        style='numbered',          # 'check' para lista de requisitos con ✓
+        style='check',                   # 'numbered' para rankings/pasos
     ),
     c.slide_close(
-        eyebrow='El compromiso',
-        title='Cita o frase <span class="accent">final</span>.',
-        quote='Cita que cierra la historia.',
+        quote='"Cita que cierra la historia."',
+        name='Nombre Apellido',
+        role='En diálogo con Estacionline',
         cta='Leé la nota completa →',
+        credit='Foto: @fotografo',
     ),
 ]
 

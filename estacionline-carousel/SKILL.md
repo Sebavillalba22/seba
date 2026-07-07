@@ -15,14 +15,20 @@ en cualquier cantidad y orden:
 
 | Función | Layout |
 |---|---|
-| `slide_cover(foto, eyebrow, title, sub, obj_pos)` | Portada: foto + overlay + texto abajo |
-| `slide_quote(text, name, role)` | Cita grande sin foto |
-| `slide_photo_text(foto, eyebrow, title, bajada, obj_pos, text_pos)` | Foto + texto abajo (`'bottom'`) o arriba (`'top'`) |
+| `slide_cover(foto, eyebrow, title, sub, obj_pos, credit)` | Portada: foto que funde al navy + texto abajo |
+| `slide_text(eyebrow, title, body, quote)` | Texto sin foto: título + cuerpo + cita opcional |
+| `slide_quote(text, name, role)` | Cita con barra lateral + atribución |
+| `slide_photo_text(foto, eyebrow, title, bajada, obj_pos, text_pos, credit)` | Foto + texto abajo (`'bottom'`) o arriba (`'top'`) |
 | `slide_photo_contain(foto, eyebrow, title, bajada)` | Foto entera sin recorte + texto debajo (fallback) |
-| `slide_number(eyebrow, number, unit, desc)` | Número literal gigante (tamaño auto) |
+| `slide_number(eyebrow, number, desc, unit)` | Dato literal gigante — número o palabra ("Épica") |
 | `slide_list(eyebrow, title, items, style)` | Lista `'numbered'` (01/02/03) o `'check'` (✓) |
 | `slide_table(eyebrow, title, rows)` | Filas localidad + cantidad |
-| `slide_close(eyebrow, title, quote, cta)` | Cierre con botón CTA |
+| `slide_close(quote, name, role, cta, credit)` | Cierre: cita + atribución + CTA claro |
+
+Todas aceptan `credit='Foto: @handle'` (abajo-izquierda) y `swipe=`
+("Deslizá →" abajo-derecha: automático en todas, `slide_close` no lo lleva).
+En textos: `<span class="accent">` para el gradiente en títulos, `<b>` para
+resaltar en el cuerpo, comillas tipográficas " ".
 
 **NUNCA escribas el HTML/CSS de una slide a mano, ni "de memoria", ni
 "basado en" los layouts.** Si escribís CSS propio vas a romper el diseño
@@ -49,11 +55,12 @@ The user provides news content (text + photos, or URL) and wants to produce an I
 Before generating, ask the user for these three things using the `ask_user_input_v0` tool:
 
 1. **Ángulo** (the editorial angle / protagonist)
-2. **Paleta** — seis opciones:
+2. **Paleta** — siete opciones:
    - Violáceo (purple)
    - Verde (green) — Funes / Roldán
    - Rosa (pink) — mujer / género / salud
    - Acero (azul metálico frío) — Muni Rosario / Converge / institucional
+   - Celeste (albiceleste) — Mundial / Scaloneta / deporte / selección
    - Atardecer (multicolor: amarillo→naranja→rojo→magenta→violeta) — provincia
    - Amarillo ocre (arena/dorado elegante) — random / gaming
 3. **Cantidad de slides** — typically 5-10, default 7
@@ -116,6 +123,8 @@ corregí y re-renderizá ANTES de mostrarle nada al usuario:
 - [ ] El contenido ocupa bien la slide: sin desbordes ni más de ~35% de
       espacio vacío muerto
 - [ ] Número grande completo, sin recortes vertical ni horizontal
+- [ ] "Deslizá →" abajo-derecha en todas las slides menos la final; crédito
+      de foto abajo-izquierda donde corresponda
 - [ ] Tipografía Inter (si se ve una fuente genérica, faltó la espera de
       `document.fonts.ready`)
 
@@ -142,21 +151,27 @@ verificar el resultado, no para reescribir CSS a mano:
   - "Estacionline" en 52px peso 900, con gradiente de la paleta
   - Línea secundaria "estacionline.com" en 20px peso 600, rgba(255,255,255,0.7)
   - **No usar más el zócalo inferior de 84px** para carousels nuevos. Si querés agregar bajada/crédito abajo, va como texto suelto, no como zócalo.
-- Cuando el carousel cierra con CTA explícito (slide final), el wordmark sigue arriba pero la slide puede sumar un botón "Más en estacionline.com →" abajo
+- Cuando el carousel cierra con CTA explícito (slide final), el wordmark sigue arriba pero la slide suma el botón CTA — **claro con texto oscuro** (`linear-gradient(135deg, LIGHT → PRIMARY)`, texto {BG_DARK})
 - **Brand mark gradient must always match the titular palette**
+- **Gradiente de marca: claro arriba → color pleno abajo** (`linear-gradient(180deg, {LIGHT} 0%, {PRIMARY} 100%)`). No usar más el gradiente viejo oscuro→claro en 165deg.
+- **Escala tipográfica**: títulos 64px/800/lh 1.12 · cuerpo 34px/400/lh 1.45 · bajada de cover 30px · eyebrow 26px uppercase. Los títulos NO van a 92px.
+- **Citas**: barra lateral de 6px en gradiente + texto 40-46px peso 600 blanco. Nada de comillón gigante de 200px. Atribución en una línea: **Nombre** · rol.
+- **"Deslizá →"** abajo-derecha en todas las slides menos la final (las funciones lo ponen solas)
+- **Crédito de foto** (`credit='Foto: @handle'`) abajo-izquierda en slides con foto; puede repetirse en la final
+- Comillas tipográficas " " en todos los textos; `<b>` para resaltar nombres/datos en el cuerpo
 - Slides con foto de fondo: wordmark con sombra suave para legibilidad (clase `.wordmark.on-photo` — usa `filter: drop-shadow`, no `text-shadow`, que se ve mal con texto en gradiente)
-- Para slides sin foto: el contenido del cuerpo arranca con padding-top 220px para no chocar con el wordmark
-- Large numbers (slide 4 style): `line-height: 1.1` y `padding: 8px 0` para prevenir clipping vertical
-- Números con símbolos (%, −, +) o muy largos: el bloque ya tiene `min-width: 440px` y `slide_number()` calcula el tamaño solo (380 hasta 4 caracteres, 240 hasta 6, 170 para 7+); pasá `size=` explícito solo para ajustes finos
+- Para slides sin foto: el contenido del cuerpo arranca a 220-230px de arriba para no chocar con el wordmark
+- Dato gigante (slide_number): `line-height 1.08` y `padding: 8px 0` para prevenir clipping vertical; sirve para números y palabras-concepto ("Épica")
+- Números con símbolos (%, −, +) o muy largos: el bloque ya tiene `min-width: 440px` y `slide_number()` calcula el tamaño solo (300 hasta 4 caracteres, 220 hasta 6, 160 para 7+); pasá `size=` explícito solo para ajustes finos
 - Step numbers en list slides: 32px
 - **Photos embedded as base64**, nunca CSS background — confiabilidad de Playwright
 - Siempre `await ImagePromiseAll` + `document.fonts.ready` antes del screenshot — sino se filtra el alt text o la fuente fallback
 
 ## Color palettes (memorize these)
 
-Las seis paletas ya están cargadas en `carousel.py` con estos valores
+Las siete paletas ya están cargadas en `carousel.py` con estos valores
 exactos — se eligen con `use_palette('violaceo'|'verde'|'rosa'|'acero'|
-'atardecer'|'ocre')`. No redefinir los hex a mano.
+'celeste'|'atardecer'|'ocre')`. No redefinir los hex a mano.
 
 ### Violáceo
 ```python
@@ -202,6 +217,17 @@ BG_DARK = '#0A1220'   # fondo casi negro con tinte azul
 
 Usar para Municipalidad de Rosario, podcast Converge, infraestructura, política urbana, institucional. Aire industrial elegante, frío y limpio.
 
+### Celeste (albiceleste)
+```python
+PRIMARY = '#4E94D6'   # celeste medio
+LIGHT = '#A6CEF0'     # celeste claro (acento)
+DARK = '#1C4E7E'      # azul profundo (sombra)
+BG_DARK = '#0A1826'   # fondo navy oscuro
+```
+
+Usar para Mundial, Scaloneta, selección argentina, deporte, notas con
+identidad albiceleste. Más luminosa y saturada que Acero.
+
 ### Atardecer (multi-stop)
 ```python
 PRIMARY = '#F97316'   # naranja vibrante
@@ -222,7 +248,9 @@ GRADIENT = ('linear-gradient(135deg, '
 
 Usar para notas de economía, energía, calor, política con contenido caliente o de crisis. Es la única paleta que rompe el patrón de 3 stops del gradiente estándar — el efecto multicolor es parte del concepto.
 
-Gradient template: `linear-gradient(165deg, {DARK} 0%, {PRIMARY} 50%, {LIGHT} 100%)`
+Gradient template: `linear-gradient(180deg, {LIGHT} 0%, {PRIMARY} 100%)` —
+**claro arriba, color pleno abajo** (estética vigente desde julio 2026;
+el viejo `165deg DARK→PRIMARY→LIGHT` está deprecado).
 
 ## Layout references
 

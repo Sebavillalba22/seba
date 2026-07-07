@@ -5,32 +5,40 @@ Todo el CSS del sistema de diseño vive acá. Para armar un carousel de
 CUALQUIER cantidad y combinación de slides, componé llamadas a las
 funciones slide_* — NUNCA escribas HTML/CSS de slides a mano.
 
+La estética está calibrada contra placas reales aprobadas (julio 2026):
+gradiente claro→oscuro, títulos 64px, cuerpo 34px, cita con barra lateral,
+CTA claro con texto oscuro, "Deslizá →" en toda slide menos la final,
+crédito de foto abajo a la izquierda.
+
 Uso:
 
     import sys; sys.path.insert(0, '/ruta/a/la/skill/scripts')
     import carousel as c
 
-    c.use_palette('violaceo')   # violaceo|verde|rosa|acero|atardecer|ocre
+    c.use_palette('celeste')  # violaceo|verde|rosa|acero|celeste|atardecer|ocre
 
     slides = [
-        c.slide_cover(c.photo('cover_b64.txt'), 'Gobierno abierto',
-                      'Mapa <span class="accent">digital</span> para vigilar obras.',
-                      'Prence propone transparencia en tiempo real.'),
-        c.slide_list('Sistema municipal', 'Qué incluye el <span class="accent">proyecto</span>.',
-                     [('Presupuesto oficial y ejecución', ''),
-                      ('Plazos reales de finalización', '')], style='check'),
-        c.slide_close('El objetivo', 'Cada rosarino sabrá dónde van <span class="accent">sus impuestos</span>.',
-                      quote='Plazo: 90 días para implementar el sistema.',
-                      cta='Más en estacionline.com →'),
+        c.slide_cover(c.photo('cover_b64.txt'), 'Entrevista exclusiva',
+                      'Topa lanzó <span class="accent">"Me muevo por aquí Mundial"</span>',
+                      'En diálogo exclusivo con Estacionline.',
+                      credit='Foto: @phsabaris'),
+        c.slide_text('Cómo nació', 'De un amigo y un <span class="accent">viaje a Italia</span>',
+                     'La idea llegó de la mano de su amigo <b>Pato</b>.',
+                     quote='"Le cambiamos un poquito algunas cositas."'),
+        c.slide_number('En una sola palabra', 'Épica',
+                       desc='Así definió Topa a <b>"Me muevo por aquí Mundial"</b>.'),
+        c.slide_close('"Sería icónico, sería hermoso que la pueda cantar todo el país."',
+                      name='Diego Topa', role='En diálogo exclusivo con Estacionline',
+                      cta='Leé la entrevista completa →', credit='Foto: @phsabaris'),
     ]
     c.write_slides('/ruta/workdir', slides)
     # después: python render.py /ruta/workdir
 
-Notas:
-- El span <span class="accent">...</span> aplica el gradiente de la paleta
-  dentro de títulos y citas.
-- Las fotos van como base64 (usar photo('archivo_b64.txt') o pasar el
-  string base64 directo). Nunca CSS background.
+Notas de contenido:
+- <span class="accent">…</span> aplica el gradiente de la paleta en títulos.
+- <b>…</b> resalta palabras en el cuerpo (queda blanco puro, peso 700).
+- Usar comillas tipográficas " " en los textos, no comillas rectas.
+- Las fotos van como base64 (photo('archivo_b64.txt')). Nunca CSS background.
 """
 from pathlib import Path
 
@@ -47,13 +55,15 @@ PALETTES = {
     'rosa':      dict(PRIMARY='#EC4899', LIGHT='#F9A8D4', DARK='#831843', BG_DARK='#1A0814'),
     # Acero — Muni Rosario / Converge / institucional
     'acero':     dict(PRIMARY='#5B8FB9', LIGHT='#B6CEDC', DARK='#1E3A5F', BG_DARK='#0A1220'),
+    # Celeste — Mundial / Scaloneta / deporte / albiceleste
+    'celeste':   dict(PRIMARY='#4E94D6', LIGHT='#A6CEF0', DARK='#1C4E7E', BG_DARK='#0A1826'),
     # Atardecer — provincia / economía / crisis (gradiente especial de 5 stops)
     'atardecer': dict(PRIMARY='#F97316', LIGHT='#FBBF24', DARK='#7C2D6F', BG_DARK='#1A0510'),
     # Amarillo ocre — random / gaming / premium
     'ocre':      dict(PRIMARY='#D4A53A', LIGHT='#E8C474', DARK='#5C3D0F', BG_DARK='#14100A'),
 }
 
-_P = None  # paleta activa (dict con PRIMARY, LIGHT, DARK, BG_DARK, *_RGB, GRADIENT)
+_P = None  # paleta activa
 
 
 def _rgb(hex_color: str) -> str:
@@ -76,7 +86,8 @@ def use_palette(name: str) -> dict:
         p['GRADIENT'] = ('linear-gradient(135deg, '
                          '#FBBF24 0%, #F97316 30%, #EF4444 55%, #EC4899 75%, #A855F7 100%)')
     else:
-        p['GRADIENT'] = f"linear-gradient(165deg, {p['DARK']} 0%, {p['PRIMARY']} 50%, {p['LIGHT']} 100%)"
+        # Estética actual: claro arriba → color pleno abajo.
+        p['GRADIENT'] = f"linear-gradient(180deg, {p['LIGHT']} 0%, {p['PRIMARY']} 100%)"
     _P = p
     return p
 
@@ -95,7 +106,7 @@ def photo(source: str) -> str:
     return source.strip()
 
 # =============================================================================
-# BASE — wordmark + reset. Presente en toda slide, no se toca.
+# BASE — wordmark, deslizá, crédito. Presentes según reglas, no se tocan.
 # =============================================================================
 
 
@@ -110,17 +121,24 @@ body {{ width: 1080px; height: 1350px; font-family: 'Inter', 'Helvetica Neue', A
 .slide {{ width: 1080px; height: 1350px; position: relative; overflow: hidden; background: {P['BG_DARK']}; }}
 .accent {{ background: {P['GRADIENT']};
     -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }}
+b, strong {{ font-weight: 700; color: #fff; }}
 /* Wordmark: arriba a la derecha, GRANDE (estándar desde mayo 2026).
    El zócalo inferior de 84px está DEPRECADO — no volver a usarlo. */
-.wordmark {{ position: absolute; top: 50px; right: 60px; z-index: 10; text-align: right; }}
+.wordmark {{ position: absolute; top: 50px; right: 60px; z-index: 10; text-align: right;
+    filter: drop-shadow(0 2px 8px rgba(0,0,0,0.45)); }}
 .wordmark .brand {{ display: block; font-size: 52px; font-weight: 900; letter-spacing: -1.5px;
     line-height: 1.05;
     background: {P['GRADIENT']}; -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }}
 .wordmark .site {{ display: block; font-size: 20px; font-weight: 600; margin-top: 2px;
     color: rgba(255,255,255,0.7); }}
-/* Variante para slides con foto: drop-shadow (no text-shadow, que se ve mal
-   con texto en gradiente). */
-.wordmark.on-photo {{ filter: drop-shadow(0 2px 10px rgba(0,0,0,0.6)); }}
+.wordmark.on-photo {{ filter: drop-shadow(0 2px 10px rgba(0,0,0,0.65)); }}
+/* Deslizá → en toda slide menos la final */
+.swipe {{ position: absolute; bottom: 70px; right: 80px; z-index: 9;
+    font-size: 20px; font-weight: 600; color: {P['LIGHT']};
+    text-transform: uppercase; letter-spacing: 3px; }}
+/* Crédito de foto abajo a la izquierda */
+.credit {{ position: absolute; bottom: 70px; left: 80px; z-index: 9;
+    font-size: 22px; font-weight: 600; color: rgba(255,255,255,0.5); }}
 """
 
 
@@ -130,19 +148,30 @@ def _wm(on_photo: bool = False) -> str:
             f'<span class="site">estacionline.com</span></div>')
 
 
-def _doc(css: str, body: str, on_photo: bool = False) -> str:
+def _extras(swipe: bool, credit: str = None, swipe_text: str = 'Deslizá →') -> str:
+    html = ''
+    if credit:
+        html += f'<div class="credit">{credit}</div>'
+    if swipe:
+        html += f'<div class="swipe">{swipe_text}</div>'
+    return html
+
+
+def _doc(css: str, body: str, on_photo: bool = False,
+         swipe: bool = True, credit: str = None) -> str:
     return (f'<!DOCTYPE html><html><head><meta charset="UTF-8"><style>'
             f'{_base_css()}{css}</style></head><body>'
-            f'<div class="slide">{body}{_wm(on_photo)}</div></body></html>')
+            f'<div class="slide">{body}{_extras(swipe, credit)}{_wm(on_photo)}</div>'
+            f'</body></html>')
 
 
 def _overlay_bottom() -> str:
     P = _pal()
     return f"""linear-gradient(180deg,
-        rgba({P['BG_RGB']},0.20) 0%,
-        rgba({P['BG_RGB']},0.30) 35%,
+        rgba({P['BG_RGB']},0.15) 0%,
+        rgba({P['BG_RGB']},0.25) 35%,
         rgba({P['BG_RGB']},0.85) 60%,
-        rgba({P['BG_RGB']},0.98) 80%,
+        rgba({P['BG_RGB']},0.98) 78%,
         rgba({P['BG_RGB']},1) 100%)"""
 
 
@@ -154,14 +183,34 @@ def _overlay_top() -> str:
         rgba({P['BG_RGB']},0.55) 55%,
         rgba({P['BG_RGB']},0.25) 100%)"""
 
+
+def _bg_glow() -> str:
+    """Fondo sin foto: glow radial sutil de la paleta."""
+    P = _pal()
+    return f"""
+.bg {{ position: absolute; inset: 0; z-index: 1; background: {P['BG_DARK']}; }}
+.bg::before {{ content:''; position: absolute; inset: 0;
+    background: radial-gradient(ellipse at 35% 45%, rgba({P['DARK_RGB']},0.55) 0%, transparent 65%),
+                radial-gradient(ellipse at 85% 90%, rgba({P['PRIMARY_RGB']},0.12) 0%, transparent 55%); }}
+"""
+
+# Tipografía compartida (estética julio 2026)
+_EYEBROW = """font-size: 26px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 4px;"""
+_TITLE = """font-size: 64px; font-weight: 800; line-height: 1.12;
+    color: white; letter-spacing: -1.5px;"""
+_BODY = """font-size: 34px; font-weight: 400; line-height: 1.45;
+    color: rgba(255,255,255,0.92); max-width: 900px;"""
+
 # =============================================================================
 # SLIDES — componé las que necesites, en el orden que necesites
 # =============================================================================
 
 
 def slide_cover(foto_b64: str, eyebrow: str, title: str, sub: str,
-                obj_pos: str = 'center 30%', swipe: str = 'Deslizá →') -> str:
-    """Layout 1: portada con foto de fondo, overlay oscuro abajo, texto abajo."""
+                obj_pos: str = 'center 30%', credit: str = None,
+                swipe: bool = True) -> str:
+    """Layout 1: portada con foto de fondo, overlay que funde al navy, texto abajo."""
     P = _pal()
     css = f"""
 .photo {{ position: absolute; inset: 0; width: 100%; height: 100%;
@@ -169,16 +218,11 @@ def slide_cover(foto_b64: str, eyebrow: str, title: str, sub: str,
 .overlay {{ position: absolute; inset: 0; z-index: 2; background: {_overlay_bottom()}; }}
 .cover-content {{ position: absolute; inset: 0; z-index: 3;
     display: flex; flex-direction: column; justify-content: flex-end;
-    padding: 0 80px 140px 80px; }}
-.eyebrow {{ font-size: 26px; font-weight: 700; text-transform: uppercase;
-    letter-spacing: 5px; color: {P['LIGHT']}; margin-bottom: 32px; }}
-.cover-title {{ font-size: 92px; font-weight: 900; line-height: 0.98;
-    color: white; letter-spacing: -3px; margin-bottom: 32px; }}
-.cover-sub {{ font-size: 28px; font-weight: 500; color: rgba(255,255,255,0.92);
-    line-height: 1.3; max-width: 850px; }}
-.swipe {{ position: absolute; bottom: 70px; right: 80px; z-index: 4;
-    font-size: 20px; font-weight: 600; color: {P['LIGHT']};
-    text-transform: uppercase; letter-spacing: 3px; }}
+    padding: 0 80px 160px 80px; }}
+.eyebrow {{ {_EYEBROW} color: {P['LIGHT']}; margin-bottom: 28px; }}
+.cover-title {{ {_TITLE} margin-bottom: 28px; }}
+.cover-sub {{ font-size: 30px; font-weight: 400; color: rgba(255,255,255,0.88);
+    line-height: 1.4; max-width: 900px; }}
 """
     body = f"""
   <img class="photo" src="data:image/jpeg;base64,{foto_b64}">
@@ -187,59 +231,80 @@ def slide_cover(foto_b64: str, eyebrow: str, title: str, sub: str,
     <div class="eyebrow">{eyebrow}</div>
     <h1 class="cover-title">{title}</h1>
     <p class="cover-sub">{sub}</p>
-  </div>
-  <div class="swipe">{swipe}</div>"""
-    return _doc(css, body, on_photo=True)
+  </div>"""
+    return _doc(css, body, on_photo=True, swipe=swipe, credit=credit)
+
+
+def slide_text(eyebrow: str, title: str, body: str, quote: str = None,
+               swipe: bool = True, credit: str = None) -> str:
+    """Layout 7: slide de texto sin foto — eyebrow + título + cuerpo +
+    cita opcional en color de la paleta. Para desarrollo del tema."""
+    P = _pal()
+    quote_html = f'<p class="t-quote">{quote}</p>' if quote else ''
+    css = _bg_glow() + f"""
+.text-wrap {{ position: absolute; inset: 0; z-index: 2;
+    display: flex; flex-direction: column; justify-content: flex-start;
+    padding: 230px 80px 150px 80px; }}
+.eyebrow {{ {_EYEBROW} color: {P['LIGHT']}; margin-bottom: 26px; }}
+.t-title {{ {_TITLE} margin-bottom: 40px; }}
+.t-body {{ {_BODY} margin-bottom: 40px; }}
+.t-quote {{ font-size: 33px; font-weight: 600; font-style: italic;
+    line-height: 1.4; color: {P['LIGHT']}; max-width: 900px; }}
+"""
+    body_html = f"""
+  <div class="bg"></div>
+  <div class="text-wrap">
+    <div class="eyebrow">{eyebrow}</div>
+    <h1 class="t-title">{title}</h1>
+    <p class="t-body">{body}</p>
+    {quote_html}
+  </div>"""
+    return _doc(css, body_html, swipe=swipe, credit=credit)
 
 
 def slide_quote(text: str, name: str, role: str,
-                attrib_label: str = '— Sus palabras') -> str:
-    """Layout 2: pull-quote grande sin foto, con atribución."""
+                eyebrow: str = None, swipe: bool = True,
+                credit: str = None) -> str:
+    """Layout 2: cita protagonista con barra lateral + atribución en línea."""
     P = _pal()
-    css = f"""
-.quote-bg {{ position: absolute; inset: 0; z-index: 1; background: {P['BG_DARK']}; }}
-.quote-bg::before {{ content:''; position: absolute; inset: 0;
-    background: radial-gradient(ellipse at 50% 50%, rgba({P['DARK_RGB']},0.7) 0%, transparent 70%); }}
-/* Sin foto: top 220px despeja el wordmark. */
+    eyebrow_html = f'<div class="eyebrow">{eyebrow}</div>' if eyebrow else ''
+    css = _bg_glow() + f"""
 .quote-wrap {{ position: absolute; inset: 0; z-index: 2;
     display: flex; flex-direction: column; justify-content: center;
-    padding: 220px 90px 100px 90px; }}
-.big-quote-mark {{ font-size: 200px; font-weight: 900; line-height: 0.7;
-    background: {P['GRADIENT']};
-    -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
-    margin-bottom: 10px; }}
-.big-quote {{ font-size: 60px; font-weight: 700; line-height: 1.15;
-    color: white; letter-spacing: -1.5px; margin-bottom: 50px; }}
-.big-quote .accent {{ background: none; -webkit-text-fill-color: {P['LIGHT']}; color: {P['LIGHT']}; }}
-.attrib {{ font-size: 22px; font-weight: 600; text-transform: uppercase;
-    letter-spacing: 3px; color: {P['PRIMARY']}; }}
-.attrib-name {{ color: white; font-size: 28px; margin-top: 6px; font-weight: 700; }}
-.attrib-role {{ color: rgba(255,255,255,0.7); font-size: 20px; margin-top: 4px;
-    font-weight: 500; }}
+    padding: 220px 80px 150px 80px; }}
+.eyebrow {{ {_EYEBROW} color: {P['LIGHT']}; margin-bottom: 40px; }}
+.q-text {{ position: relative; padding-left: 36px;
+    font-size: 46px; font-weight: 600; line-height: 1.3;
+    color: white; letter-spacing: -0.5px; margin-bottom: 36px; max-width: 920px; }}
+.q-text::before {{ content:''; position: absolute; left: 0; top: 8px; bottom: 8px;
+    width: 6px; background: {P['GRADIENT']}; border-radius: 4px; }}
+.q-attrib {{ font-size: 26px; }}
+.q-attrib .name {{ font-weight: 700; color: white; }}
+.q-attrib .role {{ font-weight: 600; color: rgba(255,255,255,0.6); }}
 """
     body = f"""
-  <div class="quote-bg"></div>
+  <div class="bg"></div>
   <div class="quote-wrap">
-    <div class="big-quote-mark">"</div>
-    <p class="big-quote">{text}</p>
-    <div class="attrib">{attrib_label}</div>
-    <div class="attrib-name">{name}</div>
-    <div class="attrib-role">{role}</div>
+    {eyebrow_html}
+    <p class="q-text">{text}</p>
+    <div class="q-attrib"><span class="name">{name}</span>
+      <span class="role"> · {role}</span></div>
   </div>"""
-    return _doc(css, body)
+    return _doc(css, body, swipe=swipe, credit=credit)
 
 
 def slide_photo_text(foto_b64: str, eyebrow: str, title: str, bajada: str,
-                     obj_pos: str = 'center 25%', text_pos: str = 'bottom') -> str:
+                     obj_pos: str = 'center 25%', text_pos: str = 'bottom',
+                     credit: str = None, swipe: bool = True) -> str:
     """Layout 3a/3b: foto de fondo + texto abajo (default) o arriba.
 
     text_pos='top' cuando la cara del sujeto está en la mitad INFERIOR de la foto.
     """
     P = _pal()
     if text_pos == 'bottom':
-        overlay, justify, padding = _overlay_bottom(), 'flex-end', '80px 80px 110px 80px'
+        overlay, justify, padding = _overlay_bottom(), 'flex-end', '80px 80px 160px 80px'
     else:
-        overlay, justify, padding = _overlay_top(), 'flex-start', '220px 80px 110px 80px'
+        overlay, justify, padding = _overlay_top(), 'flex-start', '230px 80px 160px 80px'
     css = f"""
 .photo {{ position: absolute; inset: 0; width: 100%; height: 100%;
     object-fit: cover; object-position: {obj_pos}; z-index: 1; }}
@@ -247,12 +312,10 @@ def slide_photo_text(foto_b64: str, eyebrow: str, title: str, bajada: str,
 .content {{ position: absolute; inset: 0; z-index: 3;
     display: flex; flex-direction: column; justify-content: {justify};
     padding: {padding}; }}
-.eyebrow {{ font-size: 26px; font-weight: 600; text-transform: uppercase;
-    letter-spacing: 4px; color: {P['LIGHT']}; margin-bottom: 24px; }}
-.title {{ font-size: 70px; font-weight: 800; line-height: 1.05;
-    color: white; letter-spacing: -2px; margin-bottom: 32px; }}
-.bajada {{ font-size: 28px; font-weight: 400; line-height: 1.4;
-    color: rgba(255,255,255,0.92); }}
+.eyebrow {{ {_EYEBROW} color: {P['LIGHT']}; margin-bottom: 24px; }}
+.title {{ {_TITLE} margin-bottom: 30px; }}
+.bajada {{ font-size: 30px; font-weight: 400; line-height: 1.4;
+    color: rgba(255,255,255,0.9); max-width: 900px; }}
 """
     body = f"""
   <img class="photo" src="data:image/jpeg;base64,{foto_b64}">
@@ -262,10 +325,11 @@ def slide_photo_text(foto_b64: str, eyebrow: str, title: str, bajada: str,
     <h1 class="title">{title}</h1>
     <p class="bajada">{bajada}</p>
   </div>"""
-    return _doc(css, body, on_photo=True)
+    return _doc(css, body, on_photo=True, swipe=swipe, credit=credit)
 
 
-def slide_photo_contain(foto_b64: str, eyebrow: str, title: str, bajada: str) -> str:
+def slide_photo_contain(foto_b64: str, eyebrow: str, title: str, bajada: str,
+                        credit: str = None, swipe: bool = True) -> str:
     """Layout 3c (fallback): foto entera arriba (contain), texto debajo.
 
     Usar cuando el usuario no quiere que se recorten los sujetos de una
@@ -279,12 +343,11 @@ def slide_photo_contain(foto_b64: str, eyebrow: str, title: str, bajada: str) ->
     object-fit: contain; z-index: 2; background: {P['BG_DARK']}; }}
 .content {{ position: absolute; top: 780px; left: 0; right: 0; bottom: 0; z-index: 3;
     display: flex; flex-direction: column; justify-content: flex-start;
-    padding: 30px 80px 60px 80px; }}
-.eyebrow {{ font-size: 26px; font-weight: 600; text-transform: uppercase;
-    letter-spacing: 4px; color: {P['LIGHT']}; margin-bottom: 22px; }}
-.title {{ font-size: 56px; font-weight: 800; line-height: 1.05;
-    color: white; letter-spacing: -1.5px; margin-bottom: 24px; }}
-.bajada {{ font-size: 22px; font-weight: 400; line-height: 1.4;
+    padding: 30px 80px 130px 80px; }}
+.eyebrow {{ {_EYEBROW} color: {P['LIGHT']}; margin-bottom: 22px; }}
+.title {{ font-size: 54px; font-weight: 800; line-height: 1.1;
+    color: white; letter-spacing: -1.5px; margin-bottom: 22px; }}
+.bajada {{ font-size: 26px; font-weight: 400; line-height: 1.4;
     color: rgba(255,255,255,0.85); }}
 """
     body = f"""
@@ -295,54 +358,49 @@ def slide_photo_contain(foto_b64: str, eyebrow: str, title: str, bajada: str) ->
     <h1 class="title">{title}</h1>
     <p class="bajada">{bajada}</p>
   </div>"""
-    return _doc(css, body, on_photo=True)
+    return _doc(css, body, on_photo=True, swipe=swipe, credit=credit)
 
 
-def slide_number(eyebrow: str, number: str, unit: str, desc: str,
-                 size: int = None) -> str:
-    """Layout 4: dato numérico LITERAL gigante.
+def slide_number(eyebrow: str, number: str, desc: str, unit: str = None,
+                 size: int = None, swipe: bool = True, credit: str = None) -> str:
+    """Layout 4: dato LITERAL gigante — número o palabra clave ("Épica").
 
-    size se calcula solo según el largo del número; pasalo explícito solo
-    si hace falta ajustar.
+    size se calcula solo según el largo; pasalo explícito solo para ajustes.
     """
     P = _pal()
     if size is None:
         n = len(number)
-        size = 380 if n <= 4 else (240 if n <= 6 else 170)
-    css = f"""
-.num-bg {{ position: absolute; inset: 0; z-index: 1; background: {P['BG_DARK']}; }}
-.num-bg::before {{ content:''; position: absolute; inset: 0;
-    background: radial-gradient(ellipse at 30% 30%, rgba({P['PRIMARY_RGB']},0.25) 0%, transparent 60%),
-                radial-gradient(ellipse at 80% 90%, rgba({P['DARK_RGB']},0.5) 0%, transparent 55%); }}
+        size = 300 if n <= 4 else (220 if n <= 6 else 160)
+    unit_html = f'<div class="num-unit">{unit}</div>' if unit else ''
+    css = _bg_glow() + f"""
 .num-wrap {{ position: absolute; inset: 0; z-index: 2;
     display: flex; flex-direction: column; justify-content: center;
-    padding: 220px 80px 100px 80px; }}
-.num-eyebrow {{ font-size: 26px; font-weight: 700; text-transform: uppercase;
-    letter-spacing: 4px; color: {P['LIGHT']}; margin-bottom: 30px; }}
-/* line-height 1.1 + padding vertical: previenen clipping del gradiente.
+    padding: 220px 80px 150px 80px; }}
+.num-eyebrow {{ {_EYEBROW} color: {P['LIGHT']}; margin-bottom: 24px; }}
+/* line-height + padding vertical: previenen clipping del gradiente.
    min-width 440px: evita corte horizontal con símbolos (%, −, +). */
 .big-num {{ font-size: {size}px; font-weight: 900;
-    line-height: 1.1; padding: 8px 0; min-width: 440px;
+    line-height: 1.08; padding: 8px 0; min-width: 440px;
     background: {P['GRADIENT']};
     -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
-    letter-spacing: -10px; margin-bottom: 10px; }}
-.num-unit {{ font-size: 56px; font-weight: 700; color: white;
-    margin-bottom: 40px; letter-spacing: -1px; }}
-.num-desc {{ font-size: 32px; font-weight: 500; line-height: 1.35;
-    color: rgba(255,255,255,0.9); max-width: 880px; }}
+    letter-spacing: -0.02em; margin-bottom: 24px; }}
+.num-unit {{ font-size: 48px; font-weight: 700; color: white;
+    margin-bottom: 32px; letter-spacing: -1px; }}
+.num-desc {{ {_BODY} }}
 """
     body = f"""
-  <div class="num-bg"></div>
+  <div class="bg"></div>
   <div class="num-wrap">
     <div class="num-eyebrow">{eyebrow}</div>
     <div class="big-num">{number}</div>
-    <div class="num-unit">{unit}</div>
+    {unit_html}
     <p class="num-desc">{desc}</p>
   </div>"""
-    return _doc(css, body)
+    return _doc(css, body, swipe=swipe, credit=credit)
 
 
-def slide_list(eyebrow: str, title: str, items: list, style: str = 'numbered') -> str:
+def slide_list(eyebrow: str, title: str, items: list, style: str = 'numbered',
+               swipe: bool = True, credit: str = None) -> str:
     """Layout 5a: lista de ítems. items = [(titulo, descripcion), ...].
 
     style='numbered' -> 01/02/03 ...   style='check' -> tildes ✓
@@ -358,58 +416,47 @@ def slide_list(eyebrow: str, title: str, items: list, style: str = 'numbered') -
       <div class="item-body"><h3>{t}</h3>{desc_html}</div>
     </div>''')
     items_html = '\n'.join(rows)
-    css = f"""
-.list-bg {{ position: absolute; inset: 0; z-index: 1; background: {P['BG_DARK']}; }}
-.list-bg::before {{ content:''; position: absolute; inset: 0;
-    background: radial-gradient(ellipse at 100% 0%, rgba({P['PRIMARY_RGB']},0.2) 0%, transparent 55%),
-                radial-gradient(ellipse at 0% 100%, rgba({P['DARK_RGB']},0.5) 0%, transparent 55%); }}
+    css = _bg_glow() + f"""
 .list-wrap {{ position: absolute; inset: 0; z-index: 2;
     display: flex; flex-direction: column; justify-content: center;
-    padding: 220px 80px 100px 80px; }}
-.list-eyebrow {{ font-size: 26px; font-weight: 700; text-transform: uppercase;
-    letter-spacing: 4px; color: {P['LIGHT']}; margin-bottom: 24px; }}
-.list-title {{ font-size: 64px; font-weight: 800; line-height: 1.05;
-    color: white; letter-spacing: -2px; margin-bottom: 60px; }}
+    padding: 220px 80px 150px 80px; }}
+.list-eyebrow {{ {_EYEBROW} color: {P['LIGHT']}; margin-bottom: 24px; }}
+.list-title {{ {_TITLE} margin-bottom: 56px; }}
 .item {{ display: flex; gap: 28px; margin-bottom: 40px; align-items: flex-start; }}
 .num {{ flex-shrink: 0;
     font-size: 32px; font-weight: 800;
     background: {P['GRADIENT']};
     -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
-    padding-top: 8px; min-width: 50px; }}
+    padding-top: 6px; min-width: 50px; }}
 .item-body h3 {{ font-size: 38px; font-weight: 700; color: white;
     line-height: 1.15; margin-bottom: 8px; letter-spacing: -1px; }}
-.item-body p {{ font-size: 24px; font-weight: 400; color: rgba(255,255,255,0.78);
+.item-body p {{ font-size: 26px; font-weight: 400; color: rgba(255,255,255,0.78);
     line-height: 1.4; }}
 """
     body = f"""
-  <div class="list-bg"></div>
+  <div class="bg"></div>
   <div class="list-wrap">
     <div class="list-eyebrow">{eyebrow}</div>
     <h1 class="list-title">{title}</h1>
     {items_html}
   </div>"""
-    return _doc(css, body)
+    return _doc(css, body, swipe=swipe, credit=credit)
 
 
-def slide_table(eyebrow: str, title: str, rows: list) -> str:
+def slide_table(eyebrow: str, title: str, rows: list,
+                swipe: bool = True, credit: str = None) -> str:
     """Layout 5b: filas localidad + cantidad. rows = [(loc, amt), ...]."""
     P = _pal()
     rows_html = '\n'.join(
         f'<div class="row"><span class="loc">{loc}</span><span class="amt">{amt}</span></div>'
         for loc, amt in rows
     )
-    css = f"""
-.list-bg {{ position: absolute; inset: 0; z-index: 1; background: {P['BG_DARK']}; }}
-.list-bg::before {{ content:''; position: absolute; inset: 0;
-    background: radial-gradient(ellipse at 100% 0%, rgba({P['PRIMARY_RGB']},0.2) 0%, transparent 55%),
-                radial-gradient(ellipse at 0% 100%, rgba({P['DARK_RGB']},0.5) 0%, transparent 55%); }}
+    css = _bg_glow() + f"""
 .list-wrap {{ position: absolute; inset: 0; z-index: 2;
     display: flex; flex-direction: column; justify-content: center;
-    padding: 220px 80px 100px 80px; }}
-.list-eyebrow {{ font-size: 26px; font-weight: 700; text-transform: uppercase;
-    letter-spacing: 4px; color: {P['LIGHT']}; margin-bottom: 24px; }}
-.list-title {{ font-size: 64px; font-weight: 800; line-height: 1.05;
-    color: white; letter-spacing: -2px; margin-bottom: 50px; }}
+    padding: 220px 80px 150px 80px; }}
+.list-eyebrow {{ {_EYEBROW} color: {P['LIGHT']}; margin-bottom: 24px; }}
+.list-title {{ {_TITLE} margin-bottom: 48px; }}
 .row {{ display: flex; justify-content: space-between; align-items: baseline;
     padding: 22px 0; border-bottom: 1px solid rgba(255,255,255,0.12); }}
 .loc {{ font-size: 30px; font-weight: 700; color: white; letter-spacing: -0.5px; }}
@@ -418,52 +465,58 @@ def slide_table(eyebrow: str, title: str, rows: list) -> str:
     -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }}
 """
     body = f"""
-  <div class="list-bg"></div>
+  <div class="bg"></div>
   <div class="list-wrap">
     <div class="list-eyebrow">{eyebrow}</div>
     <h1 class="list-title">{title}</h1>
     {rows_html}
   </div>"""
-    return _doc(css, body)
+    return _doc(css, body, swipe=swipe, credit=credit)
 
 
-def slide_close(eyebrow: str, title: str, quote: str = None,
-                cta: str = 'Más en estacionline.com →') -> str:
-    """Layout 6: cierre con título grande, cita opcional y botón CTA."""
+def slide_close(quote: str, name: str, role: str,
+                cta: str = 'Más en estacionline.com →',
+                eyebrow: str = None, title: str = None,
+                credit: str = None) -> str:
+    """Layout 6: cierre — cita con barra + atribución + botón CTA claro.
+
+    eyebrow/title son opcionales (para cierres con frase propia además de
+    la cita). Sin "Deslizá" — es la última slide.
+    """
     P = _pal()
-    quote_html = f'<p class="close-quote">{quote}</p>' if quote else ''
-    css = f"""
-.close-bg {{ position: absolute; inset: 0; z-index: 1; background: {P['BG_DARK']}; }}
-.close-bg::before {{ content:''; position: absolute; inset: 0;
-    background: radial-gradient(ellipse at 50% 30%, rgba({P['PRIMARY_RGB']},0.3) 0%, transparent 60%),
-                radial-gradient(ellipse at 50% 100%, rgba({P['DARK_RGB']},0.7) 0%, transparent 60%); }}
+    eyebrow_html = f'<div class="eyebrow">{eyebrow}</div>' if eyebrow else ''
+    title_html = f'<h1 class="close-title">{title}</h1>' if title else ''
+    css = _bg_glow() + f"""
 .close-wrap {{ position: absolute; inset: 0; z-index: 2;
     display: flex; flex-direction: column; justify-content: center;
-    padding: 220px 80px 100px 80px; }}
-.close-eyebrow {{ font-size: 26px; font-weight: 700; text-transform: uppercase;
-    letter-spacing: 5px; color: {P['LIGHT']}; margin-bottom: 36px; }}
-.close-title {{ font-size: 84px; font-weight: 900; line-height: 1.0;
-    color: white; letter-spacing: -3px; margin-bottom: 50px; }}
-.close-quote {{ position: relative; padding-left: 32px;
-    font-size: 28px; font-weight: 500; line-height: 1.4;
-    color: rgba(255,255,255,0.92); font-style: italic;
-    margin-bottom: 50px; max-width: 880px; }}
-.close-quote::before {{ content:''; position: absolute; left: 0; top: 4px; bottom: 4px;
+    padding: 220px 80px 150px 80px; }}
+.eyebrow {{ {_EYEBROW} color: {P['LIGHT']}; margin-bottom: 36px; }}
+.close-title {{ {_TITLE} margin-bottom: 44px; }}
+.close-quote {{ position: relative; padding-left: 36px;
+    font-size: 40px; font-weight: 600; line-height: 1.3;
+    color: white; letter-spacing: -0.5px; margin-bottom: 30px; max-width: 920px; }}
+.close-quote::before {{ content:''; position: absolute; left: 0; top: 8px; bottom: 8px;
     width: 6px; background: {P['GRADIENT']}; border-radius: 4px; }}
+.close-attrib {{ font-size: 26px; margin-bottom: 56px; }}
+.close-attrib .name {{ font-weight: 700; color: white; }}
+.close-attrib .role {{ font-weight: 600; color: rgba(255,255,255,0.6); }}
+/* CTA claro con texto oscuro — estética actual */
 .cta {{ display: inline-block; align-self: flex-start;
-    padding: 22px 44px; background: {P['GRADIENT']};
-    color: white; font-size: 24px; font-weight: 800;
+    padding: 24px 44px; background: linear-gradient(135deg, {P['LIGHT']} 0%, {P['PRIMARY']} 100%);
+    color: {P['BG_DARK']}; font-size: 26px; font-weight: 800;
     border-radius: 100px; letter-spacing: -0.5px; }}
 """
     body = f"""
-  <div class="close-bg"></div>
+  <div class="bg"></div>
   <div class="close-wrap">
-    <div class="close-eyebrow">{eyebrow}</div>
-    <h1 class="close-title">{title}</h1>
-    {quote_html}
+    {eyebrow_html}
+    {title_html}
+    <p class="close-quote">{quote}</p>
+    <div class="close-attrib"><span class="name">{name}</span>
+      <span class="role"> · {role}</span></div>
     <div class="cta">{cta}</div>
   </div>"""
-    return _doc(css, body)
+    return _doc(css, body, swipe=False, credit=credit)
 
 # =============================================================================
 # SALIDA
