@@ -9,17 +9,31 @@ Generate professional Instagram carousels (1080×1350px, 4:5 ratio) for @estacio
 
 ## 🔒 REGLA DE ORO — el diseño no se reescribe
 
-**`scripts/build_template.py` es la única fuente de verdad del diseño.**
-Para generar un carousel: copiá ese archivo, completá SOLO la sección CONFIG
-(paleta + variables de contenido) y ejecutalo. **NUNCA escribas el CSS de una
-slide desde cero, "de memoria", ni lo modifiques** salvo que el usuario pida
-explícitamente un cambio de diseño puntual — y en ese caso, tocá solo la
-propiedad pedida y nada más. Ajustes permitidos sin preguntar: variables de
-CONFIG (`SLIDE3_OBJ_POS`, `BIG_NUMBER_SIZE`, textos, paleta) y agregar/quitar
-slides duplicando los builders existentes. Todo lo demás (wordmark, paddings,
-tamaños tipográficos, gradientes, overlays) ya está resuelto en el template
-y se copia tal cual. `references/layouts.md` explica cuándo usar cada layout;
-si difiere del template, gana el template.
+**`scripts/carousel.py` es la única fuente de verdad del diseño.** Todo
+carousel se arma **componiendo llamadas** a sus funciones — una por slide,
+en cualquier cantidad y orden:
+
+| Función | Layout |
+|---|---|
+| `slide_cover(foto, eyebrow, title, sub, obj_pos)` | Portada: foto + overlay + texto abajo |
+| `slide_quote(text, name, role)` | Cita grande sin foto |
+| `slide_photo_text(foto, eyebrow, title, bajada, obj_pos, text_pos)` | Foto + texto abajo (`'bottom'`) o arriba (`'top'`) |
+| `slide_photo_contain(foto, eyebrow, title, bajada)` | Foto entera sin recorte + texto debajo (fallback) |
+| `slide_number(eyebrow, number, unit, desc)` | Número literal gigante (tamaño auto) |
+| `slide_list(eyebrow, title, items, style)` | Lista `'numbered'` (01/02/03) o `'check'` (✓) |
+| `slide_table(eyebrow, title, rows)` | Filas localidad + cantidad |
+| `slide_close(eyebrow, title, quote, cta)` | Cierre con botón CTA |
+
+**NUNCA escribas el HTML/CSS de una slide a mano, ni "de memoria", ni
+"basado en" los layouts.** Si escribís CSS propio vas a romper el diseño
+(síntoma clásico: títulos en negro porque falta `color: white`). Si la nota
+pide un layout que no existe, usá el más parecido de la tabla; solo si el
+usuario insiste en algo nuevo, agregá una función nueva a `carousel.py`
+reutilizando `_doc()`/`_base_css()` — jamás un HTML suelto.
+
+Ver `scripts/build_template.py` para un ejemplo completo de armado.
+`references/layouts.md` explica cuándo usar cada layout; si difiere de
+`carousel.py`, gana `carousel.py`.
 
 ## When to use
 
@@ -70,9 +84,11 @@ Photos are typically uploaded to `/mnt/user-data/uploads/`. For each photo:
 
 ### 4. Generate HTML + render with Playwright
 
-- **Copiá `scripts/build_template.py` al working dir y completá SOLO la
-  sección CONFIG** (ver Regla de Oro). Ese script escribe un HTML por slide
-  con el CSS canónico ya resuelto.
+- Escribí un script corto que importe `scripts/carousel.py`, llame
+  `use_palette(...)`, componga la lista de slides con las funciones
+  `slide_*` y termine en `write_slides(work_dir, slides)` (ejemplo
+  completo: `scripts/build_template.py`). **Nada de HTML/CSS a mano** —
+  ver Regla de Oro.
 - Render con `scripts/render.py <work_dir>`: viewport 1080x1350,
   device_scale_factor=2
 - **Critical**: render.py ya espera imágenes **y fuentes** antes del
@@ -85,6 +101,23 @@ Photos are typically uploaded to `/mnt/user-data/uploads/`. For each photo:
   ```
 - Screenshot at 2x, then thumbnail down to 1080×1350 with PIL.LANCZOS
 - Save final PNG to `/mnt/user-data/outputs/[topic]_carrusel/slideN.png`
+
+### 4b. Control de calidad (OBLIGATORIO antes de presentar)
+
+Abrí cada PNG renderizado y verificá contra este checklist. Si algo falla,
+corregí y re-renderizá ANTES de mostrarle nada al usuario:
+
+- [ ] Wordmark "Estacionline / estacionline.com" arriba a la derecha, con
+      gradiente de la paleta, en TODAS las slides
+- [ ] **Ningún texto en negro o casi invisible** — si pasa, escribiste CSS
+      a mano; volvé a las funciones de `carousel.py`
+- [ ] Slides con foto: el overlay oscurece la zona del texto (el texto se
+      lee sin esfuerzo)
+- [ ] El contenido ocupa bien la slide: sin desbordes ni más de ~35% de
+      espacio vacío muerto
+- [ ] Número grande completo, sin recortes vertical ni horizontal
+- [ ] Tipografía Inter (si se ve una fuente genérica, faltó la espera de
+      `document.fonts.ready`)
 
 ### 5. Present and iterate
 
@@ -100,7 +133,7 @@ When user says "copy" or "¿vamos al copy?", generate the Instagram caption. See
 ## Critical design rules (heredadas)
 
 These rules are non-negotiable — they encode prior debugging. **Todas ya
-están implementadas en `scripts/build_template.py`**; esta lista sirve para
+están implementadas en `scripts/carousel.py`**; esta lista sirve para
 verificar el resultado, no para reescribir CSS a mano:
 
 - **1080×1350px exact** (Instagram 4:5 portrait)
@@ -114,16 +147,16 @@ verificar el resultado, no para reescribir CSS a mano:
 - Slides con foto de fondo: wordmark con sombra suave para legibilidad (clase `.wordmark.on-photo` — usa `filter: drop-shadow`, no `text-shadow`, que se ve mal con texto en gradiente)
 - Para slides sin foto: el contenido del cuerpo arranca con padding-top 220px para no chocar con el wordmark
 - Large numbers (slide 4 style): `line-height: 1.1` y `padding: 8px 0` para prevenir clipping vertical
-- Números con símbolos (%, −, +) o muy largos: el bloque ya tiene `min-width: 440px`; ajustar `BIG_NUMBER_SIZE` en CONFIG (380 default, 200-260 para 5-6 caracteres, 160-180 para 7+)
+- Números con símbolos (%, −, +) o muy largos: el bloque ya tiene `min-width: 440px` y `slide_number()` calcula el tamaño solo (380 hasta 4 caracteres, 240 hasta 6, 170 para 7+); pasá `size=` explícito solo para ajustes finos
 - Step numbers en list slides: 32px
 - **Photos embedded as base64**, nunca CSS background — confiabilidad de Playwright
 - Siempre `await ImagePromiseAll` + `document.fonts.ready` antes del screenshot — sino se filtra el alt text o la fuente fallback
 
 ## Color palettes (memorize these)
 
-Las seis paletas ya están cargadas en `build_template.py` con estos valores
-exactos — se eligen con la variable `PALETA` en CONFIG (`violaceo`, `verde`,
-`rosa`, `acero`, `atardecer`, `ocre`). No redefinir los hex a mano.
+Las seis paletas ya están cargadas en `carousel.py` con estos valores
+exactos — se eligen con `use_palette('violaceo'|'verde'|'rosa'|'acero'|
+'atardecer'|'ocre')`. No redefinir los hex a mano.
 
 ### Violáceo
 ```python
@@ -195,7 +228,7 @@ Gradient template: `linear-gradient(165deg, {DARK} 0%, {PRIMARY} 50%, {LIGHT} 10
 
 See `references/layouts.md` for **when to use** each slide layout and what
 each CSS piece controls. The canonical CSS implementation lives in
-`scripts/build_template.py` — if the two ever disagree, the template wins.
+`scripts/carousel.py` — if the two ever disagree, `carousel.py` wins.
 
 ## Common pitfalls
 

@@ -1,10 +1,16 @@
 # Layout References
 
 > **⚠️ FUENTE DE VERDAD**: la implementación canónica del CSS vive en
-> `scripts/build_template.py`. Este archivo documenta **cuándo** usar cada
-> layout y qué controla cada pieza. Si este documento y el template alguna
-> vez difieren, **gana el template**. No escribas CSS de slides desde cero:
-> copiá el template y editá solo las variables de contenido.
+> `scripts/carousel.py`. Este archivo documenta **cuándo** usar cada layout
+> y qué controla cada pieza. Si este documento y `carousel.py` alguna vez
+> difieren, **gana `carousel.py`**. No escribas CSS de slides desde cero:
+> componé las funciones `slide_*` de la librería.
+>
+> Mapa layout → función: Layout 1 → `slide_cover` · Layout 2 → `slide_quote`
+> · Layout 3a/3b → `slide_photo_text` (text_pos `'bottom'`/`'top'`) ·
+> Layout 3c → `slide_photo_contain` · Layout 4 → `slide_number` ·
+> Layout 5a → `slide_list` (`'numbered'` o `'check'`) · Layout 5b →
+> `slide_table` · Layout 6 → `slide_close`.
 
 All layouts assume these variables defined in the build script:
 
@@ -236,7 +242,11 @@ Nunca bajar de 160px — si no entra, reformular el número ("1,25 millones").
 
 ---
 
-## Layout 5a: List (numbered, 3 items)
+## Layout 5a: List (numbered o check, 2-4 items)
+
+`slide_list(..., style='numbered')` numera 01/02/03; `style='check'` usa
+tildes ✓ (para requisitos, "qué incluye", checklists). La descripción de
+cada ítem puede ser `''` para listas de una sola línea.
 
 ```css
 .item { display: flex; gap: 28px; margin-bottom: 40px; align-items: flex-start; }
