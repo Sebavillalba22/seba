@@ -14,6 +14,11 @@
 
 ## Estética vigente (calibrada contra placas aprobadas, julio 2026)
 
+- **Tipografía: Inter, EMPAQUETADA en `assets/fonts/`** (pesos 400-900 +
+  600 italic). `carousel.py` emite `@font-face` con `file://` hacia esos
+  TTF — el render NO depende de internet. Si una placa sale con fuente
+  genérica (letras más anchas, "g" de dos pisos), la fuente no cargó:
+  verificá que `assets/fonts/` exista junto a `scripts/`.
 - **Gradiente de marca**: claro arriba → color pleno abajo:
   `linear-gradient(180deg, {LIGHT} 0%, {PRIMARY} 100%)`.
   Excepción: paleta "atardecer" usa su gradiente multicolor de 5 stops.

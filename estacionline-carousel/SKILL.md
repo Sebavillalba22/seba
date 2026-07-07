@@ -125,8 +125,11 @@ corregí y re-renderizá ANTES de mostrarle nada al usuario:
 - [ ] Número grande completo, sin recortes vertical ni horizontal
 - [ ] "Deslizá →" abajo-derecha en todas las slides menos la final; crédito
       de foto abajo-izquierda donde corresponda
-- [ ] Tipografía Inter (si se ve una fuente genérica, faltó la espera de
-      `document.fonts.ready`)
+- [ ] Tipografía Inter — viene empaquetada en `assets/fonts/`, sin
+      internet. Si se ve una fuente genérica (letras más anchas, "g" de
+      dos pisos), los TTF no se encontraron: verificá que `assets/fonts/`
+      esté junto a `scripts/`. Confirmalo con
+      `page.evaluate("document.fonts.check('900 52px Inter')")` → `True`
 
 ### 5. Present and iterate
 

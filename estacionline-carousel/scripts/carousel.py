@@ -110,10 +110,41 @@ def photo(source: str) -> str:
 # =============================================================================
 
 
+# Tipografía: Inter viene EMPAQUETADA en assets/fonts/ para que el render
+# no dependa de internet. Si falta (instalación incompleta), se cae a
+# Google Fonts — pero ojo: sin red, Chromium usa la fuente del sistema y
+# la tipografía sale MAL. El checklist de QA lo detecta.
+_FONT_DIR = Path(__file__).resolve().parent.parent / 'assets' / 'fonts'
+_FONT_FILES = [  # (peso, estilo, archivo)
+    (400, 'normal', 'Inter-400.ttf'),
+    (500, 'normal', 'Inter-500.ttf'),
+    (600, 'normal', 'Inter-600.ttf'),
+    (700, 'normal', 'Inter-700.ttf'),
+    (800, 'normal', 'Inter-800.ttf'),
+    (900, 'normal', 'Inter-900.ttf'),
+    (600, 'italic', 'Inter-600-Italic.ttf'),
+]
+
+
+def _font_css() -> str:
+    faces = []
+    for weight, style, fname in _FONT_FILES:
+        fpath = _FONT_DIR / fname
+        if fpath.exists():
+            faces.append(
+                f"@font-face {{ font-family: 'Inter'; font-weight: {weight}; "
+                f"font-style: {style}; src: url('file://{fpath}') format('truetype'); }}"
+            )
+    if faces:
+        return '\n'.join(faces)
+    return ("@import url('https://fonts.googleapis.com/css2?"
+            "family=Inter:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,600&display=swap');")
+
+
 def _base_css() -> str:
     P = _pal()
     return f"""
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+{_font_css()}
 * {{ margin: 0; padding: 0; box-sizing: border-box; }}
 /* color:#fff en body = red de seguridad: nada puede salir negro por defecto */
 body {{ width: 1080px; height: 1350px; font-family: 'Inter', 'Helvetica Neue', Arial, sans-serif;
