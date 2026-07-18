@@ -110,10 +110,9 @@
   a.card .byline{margin-top:auto;padding-top:.3rem}
 
   /* lead */
-  a.lead{display:grid;grid-template-columns:1.15fr .85fr;gap:0}
-  @media (max-width:800px){a.lead{grid-template-columns:1fr}}
-  a.lead .cover{aspect-ratio:16/10;height:100%;min-height:260px}
-  a.lead .body{padding:clamp(1.2rem,3vw,2rem);gap:.8rem;justify-content:center}
+  a.lead{display:flex;flex-direction:column}
+  a.lead .cover{aspect-ratio:16/9;width:100%;height:auto}
+  a.lead .body{padding:clamp(1.1rem,2.6vw,1.7rem);gap:.7rem;justify-content:flex-start}
   a.lead h3{font-size:clamp(1.6rem,3.2vw,2.5rem);font-weight:800;letter-spacing:-.025em;line-height:1.04;text-wrap:balance}
   a.lead p{font-size:1rem}
 
