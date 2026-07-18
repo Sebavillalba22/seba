@@ -49,7 +49,9 @@
   .masthead{border-bottom:1px solid var(--line-strong);background:var(--ground)}
   .masthead-in{display:flex;align-items:center;gap:1.5rem;padding-block:clamp(1rem,3vw,1.6rem)}
   .logo{font-family:var(--mono);font-weight:800;letter-spacing:-.03em;font-size:clamp(1.5rem,4.5vw,2.4rem);line-height:1;white-space:nowrap}
-  .logo b{color:var(--ink)} .logo span{background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent;-webkit-text-fill-color:transparent}
+  .logo b{color:var(--ink)}
+  .logo span:not(.tag){background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent;-webkit-text-fill-color:transparent}
+  .logo .tag{-webkit-text-fill-color:currentColor}
   .logo .tag{display:block;font-family:var(--mono);font-weight:500;font-size:.62rem;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-faint);margin-top:.5rem}
   .mast-right{margin-left:auto;display:flex;align-items:center;gap:.8rem}
   .search{display:flex;align-items:center;gap:.5rem;border:1px solid var(--line-strong);border-radius:40px;padding:.5em .9em;color:var(--ink-faint);font-family:var(--mono);font-size:.74rem;background:var(--surface)}
