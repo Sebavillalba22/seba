@@ -60,7 +60,7 @@
   <div class="wrap">
     <div class="ey">Identidad · Degradé propio</div>
     <h1>Elegí el degradé de Santafe.tech</h1>
-    <p>Un degradé propio te da identidad sin copiar a nadie. Acá están tus 4 propuestas + la de TekCrispy, cada una aplicada a un mini-portal (barra de marca, logo, cover y botón). Decime el número y lo aplico al portal completo.</p>
+    <p>Un degradé propio te da identidad sin copiar a nadie. Arriba, versiones <b>oscuro → claro</b> (más profundidad, más premium); abajo, las <b>vivas</b>. Cada una aplicada a un mini-portal. Decime el número y lo aplico al portal completo.</p>
   </div>
 </header>
 
@@ -71,16 +71,18 @@
 
 <script>
   var G = [
-    {n:"01 · Verde → Azul", g:"linear-gradient(90deg,#00E5A8,#00A3FF)", act:"#0B8FA6",
-     note:"Agro + ciencia + río Paraná. El más santafesino y propio.", star:"★ Mi recomendado", hex:"#00E5A8 → #00A3FF"},
-    {n:"02 · Rosa → Violeta", g:"linear-gradient(90deg,#FF2D7A,#7C3AED)", act:"#BE1E6E",
-     note:"La vibra de TekCrispy pero con sello propio. Bold y medio.", star:"", hex:"#FF2D7A → #7C3AED"},
-    {n:"03 · Cyan → Azul → Violeta", g:"linear-gradient(90deg,#00C2FF,#2563EB,#6D28D9)", act:"#2456C8",
-     note:"Muy IA/tech — pero es el degradé más visto en todos lados.", star:"", hex:"#00C2FF → #2563EB → #6D28D9"},
-    {n:"04 · Cyan → Violeta", g:"linear-gradient(90deg,#00D4FF,#7C3AED)", act:"#6D28D9",
-     note:"Frío y premium. Más limpio, dos paradas.", star:"", hex:"#00D4FF → #7C3AED"},
-    {n:"05 · Magenta TekCrispy", g:"linear-gradient(90deg,#FF3B82,#F72585,#9D4EDD)", act:"#C4157A",
-     note:"Igual que TekCrispy. Lo que ya está aplicado al portal.", star:"", hex:"#FF3B82 → #F72585 → #9D4EDD"}
+    {n:"01 · Oscuro → Verde-Azul", g:"linear-gradient(120deg,#052733 0%,#00A3FF 62%,#00E5A8 100%)", act:"#0B8FA6",
+     note:"Del río de noche al amanecer tech. Profundidad + identidad santafesina.", star:"★ Recomendado", hex:"#052733 → #00A3FF → #00E5A8"},
+    {n:"02 · Oscuro → Cyan-Violeta", g:"linear-gradient(120deg,#0A1030 0%,#2563EB 60%,#00C2FF 100%)", act:"#2456C8",
+     note:"Navy profundo a cyan brillante. Premium, muy tech.", star:"", hex:"#0A1030 → #2563EB → #00C2FF"},
+    {n:"03 · Oscuro → Rosa-Violeta", g:"linear-gradient(120deg,#2B0A52 0%,#9D4EDD 55%,#FF2D7A 100%)", act:"#BE1E6E",
+     note:"Violeta oscuro a rosa. La vibra TekCrispy pero con cuerpo.", star:"", hex:"#2B0A52 → #9D4EDD → #FF2D7A"},
+    {n:"04 · Verde → Azul (vivo)", g:"linear-gradient(90deg,#00E5A8,#00A3FF)", act:"#0B8FA6",
+     note:"Agro + ciencia + río. Brillante, dos paradas.", star:"", hex:"#00E5A8 → #00A3FF"},
+    {n:"05 · Rosa → Violeta (vivo)", g:"linear-gradient(90deg,#FF2D7A,#7C3AED)", act:"#BE1E6E",
+     note:"Bold y medio. Personalidad propia sobre la base TekCrispy.", star:"", hex:"#FF2D7A → #7C3AED"},
+    {n:"06 · Magenta TekCrispy", g:"linear-gradient(90deg,#FF3B82,#F72585,#9D4EDD)", act:"#C4157A",
+     note:"Igual que TekCrispy. Lo que está aplicado ahora al portal.", star:"", hex:"#FF3B82 → #F72585 → #9D4EDD"}
   ];
   var grid = document.getElementById("grid");
   G.forEach(function(p){
