@@ -150,7 +150,7 @@
 
   .grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:clamp(.7rem,1.6vw,1.1rem)}
   @media (max-width:900px){.grid4{grid-template-columns:repeat(2,1fr)}}
-  @media (max-width:520px){.grid4{grid-template-columns:1fr}}
+  @media (max-width:520px){.grid4{grid-template-columns:repeat(2,1fr);gap:.55rem}}
 
   /* main + sidebar */
   .layout{display:grid;grid-template-columns:1fr 322px;gap:clamp(1.5rem,4vw,3rem);padding-block:clamp(1.6rem,4vw,2.6rem);border-top:1px solid var(--line)}
@@ -258,6 +258,16 @@
   .foot-col a:hover{color:var(--accent-text)}
   .foot-bottom{display:flex;justify-content:space-between;gap:1rem;flex-wrap:wrap;margin-top:2.5rem;padding-top:1.5rem;border-top:1px solid var(--line);font-family:var(--mono);font-size:.68rem;letter-spacing:.05em;text-transform:uppercase;color:var(--ink-faint)}
 
+  @media (max-width:560px){
+    .hero-side{grid-template-columns:1fr 1fr;grid-template-rows:auto}
+    a.lead .cover{min-height:160px}
+    a.card .cover{aspect-ratio:16/10}
+    a.card .body{padding:.7rem .8rem .85rem;gap:.4rem}
+    a.card h3{font-size:.92rem}
+    a.riv .cover{width:104px}
+    .band,.layout,.hero{padding-block:1.4rem}
+    .col-main{gap:1.6rem}
+  }
   .ranked .num,.radarw .big,.agenda .date .d,.art-meta{font-variant-numeric:tabular-nums}
   .reveal{opacity:1}
   @media (prefers-reduced-motion:no-preference){
