@@ -484,9 +484,10 @@ async function refresh() {
   if (!okAlguno && !dirHandle && location.protocol === "file:") {
     $("pick").style.display = "inline-block";
     warn($("vitales"), [
-      "Abriste el HUD como archivo. Dos opciones: ",
-      b("① servir el repo"), " (python3 -m http.server, y entrar a localhost:8000/hud.html) o ",
-      b("② elegir la carpeta vault"), " con el botón de arriba (Chrome/Edge).",
+      "Abriste el HUD como archivo, así que el navegador no me deja leer el vault solo. ",
+      "Tocá ", b("ELEGIR CARPETA VAULT"), " acá arriba y elegí la carpeta ", b("vault"),
+      " — con eso alcanza (Chrome o Edge). ",
+      "La otra opción, si preferís terminal: ", b("./scripts/jarvis"), ".",
     ]);
   }
 }
