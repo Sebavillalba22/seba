@@ -1,0 +1,35 @@
+#!/usr/bin/env bash
+# Arranca el HUD: sirve el repo y abre el navegador.
+#
+#   ./scripts/jarvis            # puerto 8000 (o el primero libre)
+#   ./scripts/jarvis 9000
+#
+# Se queda corriendo: Ctrl+C lo apaga.
+set -euo pipefail
+
+REPO="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+cd "$REPO"
+
+PUERTO="${1:-8000}"
+libre() { ! (command -v nc >/dev/null && nc -z 127.0.0.1 "$1" 2>/dev/null); }
+if [ -z "${1:-}" ]; then
+  while ! libre "$PUERTO"; do PUERTO=$((PUERTO + 1)); done
+fi
+
+URL="http://localhost:$PUERTO/hud.html"
+python3 -m http.server "$PUERTO" --bind 127.0.0.1 >/dev/null 2>&1 &
+SERVIDOR=$!
+trap 'kill $SERVIDOR 2>/dev/null || true' EXIT INT TERM
+sleep 1
+
+kill -0 $SERVIDOR 2>/dev/null || { echo "✗ No pude levantar el servidor en el puerto $PUERTO."; exit 1; }
+
+echo "JARVIS OS · HUD en $URL"
+echo "(Ctrl+C para apagarlo)"
+
+if command -v open >/dev/null; then open "$URL"                       # macOS
+elif command -v wslview >/dev/null; then wslview "$URL"               # WSL
+elif command -v xdg-open >/dev/null; then xdg-open "$URL" >/dev/null 2>&1  # Linux
+else echo "Abrilo a mano en el navegador."; fi
+
+wait $SERVIDOR

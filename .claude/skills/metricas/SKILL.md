@@ -6,29 +6,49 @@ description: Usa esta skill cuando el usuario pida sus números, estadísticas o
 # metricas — jala tus números y los resume
 
 Una skill, un propósito: **traer las métricas reales y dejarlas en el vault**.
-Nunca inventar números: si una fuente falla, se dice y se marca `s/d`.
+Nunca inventar números: si una fuente falla, se dice y queda marcado.
 
-## Fuentes de datos
+## Cómo correrla
 
-1. **Instagram (@estacionline)** — API Graph con las credenciales ya
-   configuradas en `jarvis-haz-lo-tuyo/instagram.json`
-   (`{username, ig_user_id, page_id, access_token}`). Con `urllib` (stdlib,
-   como los demás scripts del repo):
-   - Seguidores: `GET https://graph.facebook.com/v21.0/{ig_user_id}?fields=followers_count,media_count&access_token=…`
-   - Interacciones 7 días: `GET /{ig_user_id}/media?fields=like_count,comments_count,timestamp&limit=25`
-     y sumar likes+comentarios de los posts de los últimos 7 días.
-   - Vistas/alcance 7 días: `GET /{ig_user_id}/insights?metric=views&period=day&since=…&until=…`
-     (si la API rechaza `views`, probar `reach`; si tampoco, marcar `s/d`).
-2. **Web estacionline.com** (opcional, si el usuario lo pide): posts
-   publicados en la semana vía la REST API de WordPress con
-   `jarvis-haz-lo-tuyo/wordpress.json`.
-3. Si no hay credenciales a mano o la API falla, preguntar los números al
-   usuario **o** marcar `s/d` — jamás rellenar con datos de ejemplo.
+```bash
+python3 scripts/metricas.py
+```
 
-## Salida obligatoria: `vault/outputs/metricas.md`
+El script hace todo: lee las credenciales, pega a la API Graph, actualiza
+`vault/outputs/metricas.md` manteniendo la serie de 7 días, agrega la línea al
+histórico en `vault/raw/metricas-historial.md`, mueve el estado en
+`vault/outputs/estado-skills.md` y devuelve el resumen ya ordenado por el
+número que más cambió.
 
-Formato EXACTO (el HUD lo parsea — números planos, sin puntos de miles;
-`serie7` = hasta 7 valores de más viejo a más nuevo, el de hoy al final):
+| Situación | Qué correr |
+|---|---|
+| Duda de si el token sirve | `python3 scripts/metricas.py --check` |
+| Sin credenciales / API caída | `python3 scripts/metricas.py --manual seguidores=12480 vistas=45200 interacciones=1830` |
+
+**No reescribir el `.md` a mano**: el script mantiene la serie (si ya corrió
+hoy reemplaza el valor del día, no lo duplica) y el formato que el HUD parsea.
+
+## De dónde salen los números
+
+Credenciales: `jarvis-haz-lo-tuyo/instagram.json`
+(`{username, ig_user_id, page_id, access_token}`) o las variables de entorno
+`IG_USER_ID` / `IG_ACCESS_TOKEN`.
+
+- **Seguidores**: `followers_count` del perfil.
+- **Interacciones 7d**: likes + comentarios de los posts de los últimos 7 días.
+- **Vistas 7d**: insights diarios (`views`; si la cuenta no lo habilita, cae a
+  `reach` y lo aclara en el archivo).
+
+Si una métrica falla, el script **conserva el último valor conocido** y escribe
+`nota:` con el error — el HUD lo muestra. Cuando eso pase, decírselo al usuario
+en vez de pasar el número viejo como si fuera de hoy.
+
+Para sumar la web (posts publicados en la semana): REST API de WordPress con
+`jarvis-haz-lo-tuyo/wordpress.json`. Solo si el usuario lo pide.
+
+## Formato de `vault/outputs/metricas.md`
+
+Lo genera el script; queda documentado por si hay que leerlo o repararlo:
 
 ```
 # Métricas Estacionline
@@ -37,34 +57,13 @@ actualizado: 2026-08-19 17:00
 ## Seguidores IG
 actual: 12480
 serie7: 12100 12180 12220 12300 12350 12420 12480
-
-## Vistas 7d
-actual: 45200
-serie7: 39800 41200 40100 42700 43900 44800 45200
-
-## Interacciones 7d
-actual: 1830
-serie7: 1500 1540 1610 1650 1700 1780 1830
 ```
 
-Cómo mantener `serie7`: leer el `metricas.md` anterior, correr la serie una
-posición y agregar el valor de hoy al final (máximo 7). Si es la primera
-corrida, la serie arranca con un solo valor. Si una métrica vino `s/d`,
-conservar el último valor conocido y agregar debajo `nota: <qué falló>`.
-
-Además, **registrar el histórico completo**: agregar una línea
-`2026-08-19 17:00 | seguidores 12480 | vistas 45200 | interacciones 1830`
-al final de `vault/raw/metricas-historial.md` (crearlo si no existe).
-
-## Al correr (protocolo HUD)
-
-En `vault/outputs/estado-skills.md`: al empezar, poner la línea de
-`metricas` en `corriendo`; al terminar, volver a `inactiva`, sumar 1 a
-`hoy:`, poner `ultima: HH:MM` y actualizar la línea `actualizado:`.
-Si `actualizado:` era de otro día, resetear antes todos los `hoy:` a 0.
+`serie7` = hasta 7 valores, del más viejo al más nuevo. Una sección `##` por
+métrica, `nota:` opcional debajo.
 
 ## Respuesta al usuario
 
-Resumir en **3 líneas**, el número que más cambió primero. Ejemplo de tono:
-"Interacciones +18% esta semana (1830), el carrusel de obras empujó todo.
-Seguidores 12480 (+60 en 7 días). Vistas estables en 45200."
+Las **3 líneas** que devuelve el script, tal cual salen (ya vienen ordenadas
+por variación). Si querés, agregá una línea de lectura editorial: qué post o
+qué día explica el movimiento.

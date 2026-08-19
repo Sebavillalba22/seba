@@ -50,7 +50,10 @@ terminarla.
 
 ## Al correr (protocolo HUD)
 
-En `vault/outputs/estado-skills.md`: al empezar, poner la línea de `vault`
-en `corriendo`; al terminar, volver a `inactiva`, sumar 1 a `hoy:`, poner
-`ultima: HH:MM` y actualizar `actualizado:`. Si `actualizado:` era de otro
-día, resetear antes todos los `hoy:` a 0.
+Marcá el estado con el script — no edites `estado-skills.md` a mano
+(él lleva el contador del día y lo resetea solo):
+
+```bash
+python3 scripts/estado_skills.py vault corriendo   # al empezar
+python3 scripts/estado_skills.py vault inactiva    # al terminar (suma 1 corrida)
+```

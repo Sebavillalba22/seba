@@ -4,6 +4,20 @@ Implementación de la guía *Arma tu JARVIS OS* (@ortegoat) sobre Claude Code,
 adaptada a Estacionline. Las 5 piezas, qué quedó hecho acá y qué te falta
 hacer en tu máquina.
 
+## Arranque rápido
+
+```bash
+./scripts/jarvis                  # abre el HUD en el navegador
+./scripts/instalar-voz.sh         # Pieza 4: voz (necesita micrófono)
+./scripts/conectar-obsidian.sh    # opcional: que Claude busque dentro del vault
+python3 scripts/metricas.py       # llena el panel de Vitales con datos reales
+```
+
+> **Dos cosas de la guía en PDF cambiaron desde que se escribió** y acá están
+> corregidas: el comando que registra VoiceMode es otro (el viejo ya no levanta
+> el MCP), y para Obsidian ya no hacen falta los servidores MCP de terceros —
+> el plugin oficial trae el suyo. Detalle en las piezas 4 y 3.
+
 ---
 
 ## Pieza 1 · Claude Code — el motor
@@ -73,41 +87,75 @@ plugin: Claude Code escribe los `.md` directo ahí y vos los ves organizados.
 **La regla del vault: si no está en el vault, no pasó.** Todo lo que produce
 el sistema queda como markdown en `outputs/`, así siempre podés leer qué hizo.
 
-*Camino avanzado (opcional):* para que Claude **busque dentro** del vault hay
-servidores MCP de la comunidad — [obsidian-mcp-server](https://github.com/Vasallo94/obsidian-mcp-server)
-y [obsidian-claude-code-mcp](https://github.com/iansinnott/obsidian-claude-code-mcp).
-No son oficiales de Obsidian ni de Anthropic: revisá el código y los permisos
-antes de darles acceso al vault, sobre todo si pueden escribir o borrar notas.
+### Camino avanzado: que Claude *busque* dentro del vault
+
+Esto es lo que cambió desde la guía. Ya no hace falta ningún servidor MCP de
+terceros: el plugin oficial **Local REST API** (de coddingtonbear) trae su
+propio servidor MCP adentro desde la v5.
+
+1. En Obsidian: **Configuración → Complementos de la comunidad → Buscar →
+   "Local REST API"** → instalar y activar.
+2. Abrí la configuración del plugin y **copiá la API key**.
+3. En la terminal, dentro del repo:
+
+   ```bash
+   ./scripts/conectar-obsidian.sh
+   ```
+
+   Te pide la key, prueba que Obsidian esté escuchando (HTTPS en 27124, y si
+   el certificado autofirmado da problema, HTTP en 27123) y registra el MCP en
+   Claude Code.
+
+4. Probá: *"buscá en el vault qué sabemos de X"*.
+
+Requisitos: Obsidian tiene que estar **abierto** con el vault (el servidor vive
+dentro de la app) y el plugin en **v4.1.3 o superior** — las versiones v4
+anteriores tenían un agujero de path traversal ya parcheado. Todo el tráfico es
+contra `127.0.0.1`: no sale de tu máquina.
+
+Para desconectarlo: `claude mcp remove obsidian --scope user`.
 
 ---
 
 ## Pieza 4 · Voz — oídos y boca ⏳ te toca a vos
 
-Esta pieza necesita micrófono local, así que se instala en tu máquina (no
-funciona por SSH ni en Claude Code en la web).
-
-**Opción A — dictado nativo** (ya viene, no instalás nada):
-
-```
-/voice          # dentro de Claude Code: mantené espacio, hablá, soltá
-```
-
-Requiere cuenta de claude.ai (no anda con API key directa, Bedrock, Vertex ni
-Foundry). Es solo entrada de voz: no te responde hablando.
-
-**Opción B — conversación completa, 100% local** con [VoiceMode](https://github.com/mbailey/voicemode)
-(Whisper para escuchar + Kokoro para hablar, vía MCP):
+Necesita micrófono, así que corre en tu máquina (no por SSH ni en Claude Code
+en la web). Un solo comando deja todo listo:
 
 ```bash
-curl -LsSf https://astral.sh/uv/install.sh | sh
-uvx voice-mode-install
-claude mcp add --scope user voicemode -- uvx --refresh voice-mode
-# dentro de Claude Code:
-claude converse
+./scripts/instalar-voz.sh                  # dictado en español + VoiceMode
+./scripts/instalar-voz.sh --solo-dictado   # solo lo nativo, no instala nada más
 ```
 
-Gratis (sin costo por minuto), privado (el audio no sale de tu máquina), con
-fallback opcional a OpenAI si preferís nube.
+**Opción A — dictado nativo** (ya viene con Claude Code). Con `/voice` tocás
+espacio, hablás, y tu voz se transcribe en el prompt.
+
+⚠️ **El dictado arranca en inglés**: si no le cambiás el idioma, transcribe
+cualquier cosa. El script te lo deja en español (`"language": "spanish"` en
+`~/.claude/settings.json`) y en modo *tap* — tocás espacio, hablás, tocás y se
+manda. Con `/voice hold` volvés a mantener apretado.
+
+Requiere cuenta de claude.ai (no anda con API key directa, Bedrock, Vertex ni
+Foundry). El audio se transcribe en los servidores de Anthropic, y no consume
+tokens ni cuenta para tus límites. Es solo entrada: no te responde hablando.
+
+**Opción B — conversación completa, 100% local** con [VoiceMode](https://github.com/mbailey/voicemode)
+(Whisper para escuchar + Kokoro para hablar). Ahí sí te contesta en voz alta,
+gratis y sin que el audio salga de tu máquina.
+
+⚠️ **El comando de la guía en PDF quedó viejo.** El que registra el MCP hoy es:
+
+```bash
+claude mcp add --scope user voicemode -- uvx --refresh --from voice-mode voicemode-mcp-launcher
+```
+
+El instalador ya usa el correcto, y además resuelve las dependencias del
+sistema (ffmpeg, portaudio, ALSA en Linux; sox con PulseAudio si estás en WSL).
+La primera corrida baja los modelos: tarda. Después:
+
+```bash
+claude converse
+```
 
 Cuando trabajes por voz, la skill `vault` mantiene actualizado
 `vault/outputs/audio.md` y la franja de abajo del HUD muestra la última
@@ -121,16 +169,15 @@ transcripción y la última respuesta.
 negro, un solo acento (el verde del isologo), mono para números y sans para
 etiquetas. Todo en una pantalla, sin scroll.
 
-**Cómo abrirlo** (necesita servidor para poder leer los `.md`):
+**Cómo abrirlo:**
 
 ```bash
-python3 -m http.server 8000
-# y entrá a http://localhost:8000/hud.html
+./scripts/jarvis        # levanta el servidor y abre el navegador
 ```
 
-Si lo abrís haciendo doble clic (`file://`), el navegador bloquea la lectura de
-archivos: el propio HUD te ofrece un botón **ELEGIR CARPETA VAULT** (Chrome y
-Edge) para darle acceso a mano.
+(Necesita servidor para poder leer los `.md`. Si lo abrís haciendo doble clic,
+`file://` bloquea la lectura: el propio HUD te ofrece un botón **ELEGIR CARPETA
+VAULT** en Chrome y Edge para darle acceso a mano.)
 
 **Los 4 paneles + la franja de audio:**
 
@@ -154,13 +201,28 @@ Con la Pieza 4 andando, se lo ajustás hablando.
 
 ---
 
+## Los scripts
+
+| Script | Qué hace |
+|---|---|
+| `scripts/jarvis` | Levanta el HUD y lo abre en el navegador |
+| `scripts/metricas.py` | Jala los números de IG al vault (`--check`, `--manual`) |
+| `scripts/estado_skills.py` | Mueve el estado de las skills que muestra el HUD |
+| `scripts/instalar-voz.sh` | Pieza 4: dictado en español + VoiceMode |
+| `scripts/conectar-obsidian.sh` | Registra el MCP de Obsidian en Claude Code |
+
+Todo con Python de la biblioteca estándar: no hay que instalar dependencias.
+
+---
+
 ## Checklist final
 
 - [x] Claude Code instalado y corriendo en tu proyecto
 - [x] Al menos 3 skills (hay 5, en `.claude/skills/`)
 - [x] Vault de Obsidian escribiendo outputs reales
-- [ ] **Voz** — nativa (`/voice`) o VoiceMode — respondiendo *(en tu máquina)*
-- [ ] **HUD mostrando datos reales** — abrilo y corré `metricas` para poblar Vitales
+- [ ] **Voz** — `./scripts/instalar-voz.sh` *(en tu máquina, necesita micrófono)*
+- [ ] **HUD mostrando datos reales** — `./scripts/jarvis` + `python3 scripts/metricas.py`
+      (necesita `jarvis-haz-lo-tuyo/instagram.json`, que vive solo en tu máquina)
 
 ---
 
