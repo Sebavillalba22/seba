@@ -1,0 +1,7 @@
+__pycache__/
+*.pyc
+
+# Credenciales: nunca al repo
+jarvis-haz-lo-tuyo/instagram.json
+jarvis-haz-lo-tuyo/wordpress.json
+jarvis-haz-lo-tuyo/.credentials.json
