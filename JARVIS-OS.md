@@ -119,8 +119,21 @@ Para desconectarlo: `claude mcp remove obsidian --scope user`.
 
 ## Pieza 4 · Voz — oídos y boca ⏳ te toca a vos
 
-Necesita micrófono, así que corre en tu máquina (no por SSH ni en Claude Code
-en la web). Un solo comando deja todo listo:
+> ⚠️ **La voz no funciona en Claude Code en la web.** El micrófono está en tu
+> máquina y la sesión web corre en un servidor: no hay forma de que te escuche
+> desde ahí. Para hablar y que te responda necesitás Claude Code instalado
+> localmente (`npm install -g @anthropic-ai/claude-code`). Lo mismo vale para
+> sesiones por SSH.
+>
+> **Si estás en Windows:** el dictado (`/voice`) anda en Windows nativo, pero
+> VoiceMode no tiene instalación documentada ahí — el camino que funciona es
+> **WSL2** (`wsl --install` en PowerShell como administrador, después clonás el
+> repo dentro de Ubuntu y corrés el instalador desde ahí). En WSL hacen falta
+> los paquetes de PulseAudio para que el micrófono entre; el script los pone
+> solo. Si usás WSL para el dictado nativo, además necesitás WSLg (viene con
+> WSL2 instalado desde la Microsoft Store).
+
+Un solo comando deja todo listo:
 
 ```bash
 ./scripts/instalar-voz.sh                  # dictado en español + VoiceMode

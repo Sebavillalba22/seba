@@ -53,14 +53,33 @@ case "$(uname -s)" in
     fi;;
   Linux)
     if command -v apt-get >/dev/null; then
-      PAQS="ffmpeg gcc libasound2-dev libasound2-plugins libportaudio2 portaudio19-dev"
+      PAQS="ffmpeg gcc libasound2-dev libasound2-plugins libportaudio2 portaudio19-dev python3-dev"
+      # En WSL el micrófono entra por PulseAudio, no por ALSA: sin estos
+      # paquetes VoiceMode instala bien pero no escucha nada.
+      if grep -qi microsoft /proc/version 2>/dev/null; then
+        PAQS="$PAQS pulseaudio pulseaudio-utils sox libsox-fmt-pulse"
+        echo "  (detecté WSL: agrego los paquetes de PulseAudio para el micrófono)"
+      fi
       echo "  Hacen falta: $PAQS"
       echo "  (pide sudo — si preferís, cancelá con Ctrl+C e instalalos vos)"
       sudo apt-get update -qq && sudo apt-get install -y $PAQS
-      grep -qi microsoft /proc/version 2>/dev/null && sudo apt-get install -y sox libsox-fmt-pulse
     else
-      echo "  ! No es apt. Instalá el equivalente de: ffmpeg gcc alsa portaudio"
+      echo "  ! No es apt. Instalá el equivalente de: ffmpeg gcc alsa portaudio pulseaudio"
     fi;;
+  MINGW*|MSYS*|CYGWIN*)
+    cat <<'FIN'
+  ✗ Estás en Windows nativo (Git Bash / MSYS).
+
+    VoiceMode no tiene instalación documentada para Windows nativo. El camino
+    que anda es WSL2:
+      1. En PowerShell como administrador:  wsl --install
+      2. Abrí Ubuntu, clonate el repo adentro de WSL
+      3. Volvé a correr este script desde ahí
+
+    Mientras tanto, el dictado nativo (/voice) sí funciona en Windows:
+      ./scripts/instalar-voz.sh --solo-dictado
+FIN
+    exit 1;;
 esac
 
 # ── 3. uv + VoiceMode ───────────────────────────────────────────────────────
