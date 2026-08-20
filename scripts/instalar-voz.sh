@@ -54,11 +54,12 @@ case "$(uname -s)" in
   Linux)
     if command -v apt-get >/dev/null; then
       PAQS="ffmpeg gcc libasound2-dev libasound2-plugins libportaudio2 portaudio19-dev python3-dev"
-      # En WSL el micrófono entra por PulseAudio, no por ALSA: sin estos
-      # paquetes VoiceMode instala bien pero no escucha nada.
+      # En WSL el micrófono entra por PulseAudio, no por ALSA. El servidor lo
+      # provee WSLg: instalar el paquete `pulseaudio` levantaría un segundo
+      # daemon que compite con él, así que van solo las herramientas cliente.
       if grep -qi microsoft /proc/version 2>/dev/null; then
-        PAQS="$PAQS pulseaudio pulseaudio-utils sox libsox-fmt-pulse"
-        echo "  (detecté WSL: agrego los paquetes de PulseAudio para el micrófono)"
+        PAQS="$PAQS pulseaudio-utils sox libsox-fmt-pulse"
+        echo "  (detecté WSL: agrego las herramientas de PulseAudio para el micrófono)"
       fi
       echo "  Hacen falta: $PAQS"
       echo "  (pide sudo — si preferís, cancelá con Ctrl+C e instalalos vos)"

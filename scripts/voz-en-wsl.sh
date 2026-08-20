@@ -26,12 +26,21 @@ command -v claude >/dev/null || sudo npm install -g @anthropic-ai/claude-code
 
 echo
 echo "══ 2/4 · Dependencias de audio ══"
-# En WSL el micrófono entra por PulseAudio (WSLg), no por ALSA: sin estos
-# paquetes VoiceMode instala bien pero no escucha nada.
+# En WSL el micrófono entra por PulseAudio, no por ALSA. OJO: el servidor
+# PulseAudio ya lo provee WSLg (en unix:/mnt/wslg/PulseServer) — instalar el
+# paquete `pulseaudio` levantaría un segundo daemon que compite con ese.
+# Solo van las herramientas cliente (pulseaudio-utils) y el backend de sox.
 sudo apt-get update -qq
 sudo apt-get install -y ffmpeg gcc python3-dev \
   libasound2-dev libasound2-plugins libportaudio2 portaudio19-dev \
-  pulseaudio pulseaudio-utils sox libsox-fmt-pulse
+  pulseaudio-utils sox libsox-fmt-pulse
+
+# Comprobar el puente de audio antes de bajar los modelos (son pesados).
+if ! pactl info >/dev/null 2>&1; then
+  echo "✗ PulseAudio no responde. Revisá que WSLg esté activo (wsl --update)."
+  exit 1
+fi
+echo "  ✓ audio conectado: $(pactl info | grep -i 'Server String' || true)"
 
 echo
 echo "══ 3/4 · VoiceMode (baja los modelos: tarda) ══"
