@@ -1,0 +1,55 @@
+#!/usr/bin/env bash
+# Arranca el HUD: sirve el repo y abre el navegador.
+#
+#   ./scripts/jarvis            # puerto 8000 (o el primero libre)
+#   ./scripts/jarvis 9000
+#
+# Se queda corriendo: Ctrl+C lo apaga.
+set -euo pipefail
+
+REPO="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+cd "$REPO"
+
+EN_WSL=false
+grep -qi microsoft /proc/version 2>/dev/null && EN_WSL=true
+
+PUERTO="${1:-8000}"
+libre() { ! (command -v nc >/dev/null && nc -z 127.0.0.1 "$1" 2>/dev/null); }
+if [ -z "${1:-}" ]; then
+  while ! libre "$PUERTO"; do PUERTO=$((PUERTO + 1)); done
+fi
+
+# En WSL el navegador corre del lado de Windows: atarse solo a 127.0.0.1 deja
+# el HUD invisible desde Chrome. Con 0.0.0.0 el reenvío de localhost de WSL2
+# lo alcanza. Fuera de WSL nos quedamos en loopback, que es más cerrado.
+if $EN_WSL; then BIND="0.0.0.0"; else BIND="127.0.0.1"; fi
+
+URL="http://localhost:$PUERTO/hud.html"
+python3 -m http.server "$PUERTO" --bind "$BIND" >/dev/null 2>&1 &
+SERVIDOR=$!
+trap 'kill $SERVIDOR 2>/dev/null || true' EXIT INT TERM
+sleep 1
+
+kill -0 $SERVIDOR 2>/dev/null || { echo "✗ No pude levantar el servidor en el puerto $PUERTO."; exit 1; }
+
+echo
+echo "  JARVIS OS · HUD andando"
+echo "  → $URL"
+echo
+echo "  (Ctrl+C para apagarlo)"
+echo
+
+if $EN_WSL; then
+  # wslview viene del paquete wslu, que no está instalado por defecto.
+  if command -v wslview >/dev/null; then
+    wslview "$URL" 2>/dev/null || true
+  else
+    echo "  Abrí ese link en Chrome (en Windows Terminal se hace clic con Ctrl)."
+    echo "  Para que se abra solo la próxima vez: sudo apt install wslu"
+    echo
+  fi
+elif command -v open >/dev/null; then open "$URL"                          # macOS
+elif command -v xdg-open >/dev/null; then xdg-open "$URL" >/dev/null 2>&1  # Linux
+else echo "  Abrilo a mano en el navegador."; fi
+
+wait $SERVIDOR

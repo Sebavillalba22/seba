@@ -1,0 +1,516 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>JARVIS OS — Estacionline</title>
+<style>
+  /* ── Tokens ──────────────────────────────────────────────── */
+  :root {
+    --bg: #060907;
+    --panel: #0b100c;
+    --line: #1a241b;
+    --ink: #e8efe6;
+    --muted: #7c8a7c;
+    --faint: #46524a;
+    --accent: #a3e635;           /* único color de acento (verde Estacionline) */
+    --accent-dim: rgba(163, 230, 53, .10);
+    --accent-line: rgba(163, 230, 53, .35);
+    --mono: ui-monospace, "SF Mono", "Cascadia Code", "JetBrains Mono", Menlo, Consolas, monospace;
+    --sans: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { height: 100%; }
+  body {
+    background: var(--bg);
+    background-image: radial-gradient(ellipse 80% 60% at 50% -10%, rgba(163,230,53,.05), transparent);
+    color: var(--ink);
+    font-family: var(--sans);
+    font-size: 14px;
+    overflow: hidden;                       /* todo cabe en una pantalla, sin scroll */
+    display: grid;
+    grid-template-rows: auto minmax(0,1fr) auto;
+    gap: 10px;
+    padding: 12px 14px;
+  }
+
+  /* ── Franja de estado (arriba) ───────────────────────────── */
+  header {
+    display: flex; align-items: baseline; gap: 16px;
+    border: 1px solid var(--line); border-radius: 8px;
+    background: var(--panel);
+    padding: 10px 16px;
+  }
+  header .brand { font-family: var(--mono); font-weight: 700; letter-spacing: .18em; font-size: 15px; }
+  header .brand b { color: var(--accent); font-weight: 700; }
+  header .date { color: var(--muted); font-size: 12.5px; letter-spacing: .04em; }
+  header .spacer { flex: 1; }
+  header .src { font-family: var(--mono); font-size: 11.5px; color: var(--muted); letter-spacing: .06em; }
+  header .src b { color: var(--accent); font-weight: 600; }
+  header .clock { font-family: var(--mono); font-size: 20px; color: var(--accent); font-variant-numeric: tabular-nums; }
+  header button {
+    font: 600 11px var(--mono); letter-spacing: .08em;
+    color: var(--accent); background: var(--accent-dim);
+    border: 1px solid var(--accent-line); border-radius: 6px;
+    padding: 5px 10px; cursor: pointer; display: none;
+  }
+  header button:hover { background: rgba(163,230,53,.18); }
+
+  /* ── Centro: dos columnas ────────────────────────────────── */
+  main {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: minmax(0,1fr) minmax(0,1fr);
+    gap: 10px; min-height: 0;
+  }
+  .panel {
+    position: relative;
+    background: var(--panel);
+    border: 1px solid var(--line); border-radius: 8px;
+    padding: 12px 14px 12px;
+    display: flex; flex-direction: column; min-height: 0;
+  }
+  /* escuadras de HUD en las esquinas */
+  .panel::before, .panel::after {
+    content: ""; position: absolute; width: 14px; height: 14px; pointer-events: none;
+  }
+  .panel::before { top: -1px; left: -1px; border-top: 2px solid var(--accent-line); border-left: 2px solid var(--accent-line); border-top-left-radius: 8px; }
+  .panel::after  { bottom: -1px; right: -1px; border-bottom: 2px solid var(--accent-line); border-right: 2px solid var(--accent-line); border-bottom-right-radius: 8px; }
+
+  .panel h2 {
+    font: 700 11px var(--sans); letter-spacing: .22em; color: var(--muted);
+    display: flex; align-items: center; gap: 8px; margin-bottom: 10px;
+  }
+  .panel h2::before { content: ""; width: 8px; height: 8px; background: var(--accent); clip-path: polygon(0 0, 100% 50%, 0 100%); }
+  .panel h2 .meta { margin-left: auto; font: 500 10.5px var(--mono); letter-spacing: .05em; color: var(--faint); text-transform: none; }
+  .body { flex: 1; min-height: 0; overflow: auto; scrollbar-width: thin; scrollbar-color: var(--line) transparent; }
+
+  /* estado de error / vacío visible (regla de la guía) */
+  .warn {
+    border-left: 3px solid var(--accent);
+    background: var(--accent-dim);
+    color: var(--muted);
+    font: 500 12px var(--mono);
+    padding: 10px 12px; border-radius: 0 6px 6px 0;
+    line-height: 1.5;
+  }
+  .warn b { color: var(--accent); font-weight: 600; }
+
+  /* ── Panel 1: Vitales ────────────────────────────────────── */
+  .vital {
+    display: grid; grid-template-columns: 1fr auto; align-items: center;
+    gap: 4px 14px; padding: 9px 2px;
+  }
+  .vital + .vital { border-top: 1px solid var(--line); }
+  .vital .label { font: 600 11px var(--sans); letter-spacing: .14em; color: var(--muted); text-transform: uppercase; }
+  .vital .num { font: 700 24px var(--mono); font-variant-numeric: tabular-nums; line-height: 1.1; }
+  .vital .delta { font: 600 11.5px var(--mono); color: var(--accent); letter-spacing: .03em; }
+  .vital .delta.flat { color: var(--faint); }
+  .vital .spark { grid-row: 1 / span 3; grid-column: 2; }
+  .vital svg { display: block; }
+
+  /* ── Panel 2: Agenda ─────────────────────────────────────── */
+  .task {
+    display: flex; align-items: baseline; gap: 12px;
+    padding: 7px 8px; border-radius: 6px;
+    border-left: 3px solid transparent;
+  }
+  .task .hora { font: 600 13px var(--mono); color: var(--muted); font-variant-numeric: tabular-nums; min-width: 46px; }
+  .task .txt { font-size: 13.5px; line-height: 1.35; }
+  .task .tag { margin-left: auto; font: 700 9.5px var(--mono); letter-spacing: .18em; color: var(--accent); white-space: nowrap; }
+  .task.now { border-left-color: var(--accent); background: var(--accent-dim); }
+  .task.now .hora { color: var(--accent); }
+  .task.done .txt { text-decoration: line-through; color: var(--faint); }
+  .task.done .hora { color: var(--faint); }
+  .task.past:not(.done):not(.now) { opacity: .55; }
+
+  /* ── Panel 3: Comandos ───────────────────────────────────── */
+  .skill {
+    display: flex; align-items: center; gap: 10px;
+    padding: 7px 8px; border-radius: 6px; border: 1px solid transparent;
+  }
+  .skill + .skill { margin-top: 2px; }
+  .skill .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--faint); flex: none; }
+  .skill.run { border-color: var(--accent-line); background: var(--accent-dim); }
+  .skill.run .dot { background: var(--accent); animation: pulse 1.1s ease-in-out infinite; }
+  .skill .name { font: 600 13px var(--mono); letter-spacing: .03em; }
+  .skill .st { font: 500 10.5px var(--sans); letter-spacing: .12em; color: var(--muted); text-transform: uppercase; }
+  .skill.run .st { color: var(--accent); }
+  .skill .count { margin-left: auto; font: 600 12px var(--mono); color: var(--muted); font-variant-numeric: tabular-nums; }
+  .skill .count b { color: var(--ink); font-weight: 700; }
+
+  /* ── Panel 4: Inbox ──────────────────────────────────────── */
+  .msg { padding: 8px 2px; }
+  .msg + .msg { border-top: 1px solid var(--line); }
+  .msg .head { display: flex; gap: 10px; align-items: baseline; margin-bottom: 3px; }
+  .msg .hora { font: 700 11.5px var(--mono); color: var(--accent); }
+  .msg .title { font: 600 12.5px var(--sans); letter-spacing: .02em; }
+  .msg .txt { font-size: 12.5px; color: var(--muted); line-height: 1.45; }
+
+  /* ── Franja de audio (abajo) ─────────────────────────────── */
+  footer {
+    display: flex; align-items: center; gap: 16px;
+    border: 1px solid var(--line); border-radius: 8px;
+    background: var(--panel); padding: 10px 16px;
+    min-height: 46px;
+  }
+  footer .mic { display: flex; align-items: center; gap: 9px; min-width: 132px; }
+  footer .mic .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--faint); }
+  footer .mic.on .dot { background: var(--accent); animation: pulse 1s ease-in-out infinite; }
+  footer .mic .st { font: 700 10.5px var(--mono); letter-spacing: .2em; color: var(--muted); }
+  footer .mic.on .st { color: var(--accent); }
+  footer .io { flex: 1; min-width: 0; display: grid; gap: 2px; }
+  footer .io div { display: flex; gap: 8px; align-items: baseline; min-width: 0; }
+  footer .io .who { font: 700 10px var(--mono); letter-spacing: .14em; color: var(--faint); min-width: 52px; }
+  footer .io .say { font: 500 12px var(--mono); color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  footer .io .say.me { color: var(--ink); }
+
+  @keyframes pulse { 50% { opacity: .35; } }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand">JARVIS<b>OS</b> · ESTACIONLINE</div>
+  <div class="date" id="fecha">—</div>
+  <div class="spacer"></div>
+  <button id="pick">ELEGIR CARPETA VAULT</button>
+  <div class="src" id="src">FUENTE <b>—</b></div>
+  <div class="clock" id="reloj">--:--:--</div>
+</header>
+
+<main>
+  <section class="panel" style="grid-area: 1 / 1;">
+    <h2>VITALES <span class="meta" id="vit-meta"></span></h2>
+    <div class="body" id="vitales"></div>
+  </section>
+  <section class="panel" style="grid-area: 2 / 1;">
+    <h2>AGENDA DE HOY <span class="meta" id="ag-meta"></span></h2>
+    <div class="body" id="agenda"></div>
+  </section>
+  <section class="panel" style="grid-area: 1 / 2;">
+    <h2>PANEL DE COMANDOS <span class="meta" id="cmd-meta"></span></h2>
+    <div class="body" id="comandos"></div>
+  </section>
+  <section class="panel" style="grid-area: 2 / 2;">
+    <h2>INBOX <span class="meta" id="in-meta"></span></h2>
+    <div class="body" id="inbox"></div>
+  </section>
+</main>
+
+<footer>
+  <div class="mic" id="mic"><span class="dot"></span><span class="st" id="mic-st">SIN DATOS</span></div>
+  <div class="io">
+    <div><span class="who">VOS</span><span class="say me" id="io-in">—</span></div>
+    <div><span class="who">JARVIS</span><span class="say" id="io-out">—</span></div>
+  </div>
+</footer>
+
+<script>
+"use strict";
+/* JARVIS OS HUD — lee los .md de vault/outputs/. Sin datos de ejemplo:
+   si un archivo falta, el panel lo dice y explica qué skill lo genera. */
+
+const FILES = {
+  metricas: "metricas.md",
+  plan: "plan.md",
+  inbox: "inbox.md",
+  estado: "estado-skills.md",
+  audio: "audio.md",
+};
+const REFRESH_MS = 5000;
+let dirHandle = null;        // File System Access API (modo file://)
+let fuente = "—";
+
+const $ = (id) => document.getElementById(id);
+function el(tag, cls, text) {
+  const n = document.createElement(tag);
+  if (cls) n.className = cls;
+  if (text !== undefined) n.textContent = text;
+  return n;
+}
+function warn(container, html) {
+  container.replaceChildren();
+  const w = el("div", "warn");
+  w.append(...html);
+  container.append(w);
+}
+function b(text) { const n = el("b", "", text); return n; }
+
+/* ── Lectura de archivos (http o carpeta local) ─────────────── */
+async function readVaultFile(name) {
+  if (dirHandle) {
+    let dir = dirHandle;
+    try { dir = await dirHandle.getDirectoryHandle("outputs"); } catch (e) { /* ya es outputs/ */ }
+    const fh = await dir.getFileHandle(name);        // lanza si no existe
+    return await (await fh.getFile()).text();
+  }
+  const res = await fetch("vault/outputs/" + name + "?t=" + Date.now(), { cache: "no-store" });
+  if (!res.ok) throw new Error("HTTP " + res.status);
+  return await res.text();
+}
+
+/* ── Parsers ────────────────────────────────────────────────── */
+function getUpdated(text) {
+  const m = text.match(/^actualizado:\s*(.+)$/m);
+  return m ? m[1].trim() : "";
+}
+function parseMetricas(text) {
+  const out = { actualizado: getUpdated(text), metricas: [] };
+  const parts = text.split(/^##\s+/m).slice(1);
+  for (const p of parts) {
+    const lines = p.split("\n");
+    const nombre = lines[0].trim();
+    const mAct = p.match(/^actual:\s*(.+)$/m);
+    const mSerie = p.match(/^serie7:\s*(.+)$/m);
+    const mNota = p.match(/^nota:\s*(.+)$/m);
+    const serie = mSerie ? mSerie[1].trim().split(/[\s,]+/).map(Number).filter((n) => !isNaN(n)) : [];
+    out.metricas.push({ nombre, actual: mAct ? mAct[1].trim() : "s/d", serie, nota: mNota ? mNota[1].trim() : "" });
+  }
+  return out;
+}
+function parsePlan(text) {
+  const tareas = [];
+  for (const line of text.split("\n")) {
+    const m = line.match(/^-\s*(?:\[([ xX])\]\s*)?(?:(\d{1,2}:\d{2})\s+)?(.+)$/);
+    if (m) tareas.push({ done: /[xX]/.test(m[1] || ""), hora: m[2] || "", txt: m[3].trim() });
+  }
+  const mTit = text.match(/^#\s*(.+)$/m);
+  return { titulo: mTit ? mTit[1].trim() : "", tareas };
+}
+function parseInbox(text) {
+  const items = [];
+  const parts = text.split(/^##\s+/m).slice(1);
+  for (const p of parts) {
+    const lines = p.split("\n");
+    const head = lines[0].trim();
+    const mh = head.match(/^(\d{1,2}:\d{2})\s*[—-]\s*(.+)$/);
+    items.push({
+      hora: mh ? mh[1] : "",
+      titulo: mh ? mh[2] : head,
+      cuerpo: lines.slice(1).join(" ").replace(/\s+/g, " ").trim(),
+    });
+  }
+  return items;
+}
+function parseEstado(text) {
+  const skills = [];
+  for (const line of text.split("\n")) {
+    const m = line.match(/^-\s*(\S+)\s*\|\s*(\S+)\s*\|\s*hoy:\s*(\d+)\s*\|\s*ultima:\s*(.+)$/);
+    if (m) skills.push({ nombre: m[1], estado: m[2], hoy: +m[3], ultima: m[4].trim() });
+  }
+  return { actualizado: getUpdated(text), skills };
+}
+function parseAudio(text) {
+  const g = (k) => { const m = text.match(new RegExp("^" + k + ":\\s*(.+)$", "m")); return m ? m[1].trim() : "—"; };
+  return { estado: g("estado"), transcripcion: g("transcripcion"), respuesta: g("respuesta"), actualizado: g("actualizado") };
+}
+
+/* ── Sparkline SVG (una serie, línea 2px + punto final) ─────── */
+function sparkline(serie) {
+  const W = 116, H = 40, P = 4;
+  const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+  svg.setAttribute("viewBox", `0 0 ${W} ${H}`);
+  svg.setAttribute("width", W); svg.setAttribute("height", H);
+  const t = document.createElementNS(svg.namespaceURI, "title");
+  t.textContent = "últimos 7: " + serie.join(" · ");
+  svg.append(t);
+  if (serie.length < 2) return svg;
+  const min = Math.min(...serie), max = Math.max(...serie), span = max - min || 1;
+  const pts = serie.map((v, i) => [
+    P + (i * (W - 2 * P)) / (serie.length - 1),
+    H - P - ((v - min) / span) * (H - 2 * P),
+  ]);
+  const area = document.createElementNS(svg.namespaceURI, "path");
+  area.setAttribute("d", "M" + pts.map((p) => p.map((n) => n.toFixed(1)).join(",")).join(" L") +
+    ` L${(W - P).toFixed(1)},${H} L${P},${H} Z`);
+  area.setAttribute("fill", "rgba(163,230,53,.09)");
+  const line = document.createElementNS(svg.namespaceURI, "polyline");
+  line.setAttribute("points", pts.map((p) => p.map((n) => n.toFixed(1)).join(",")).join(" "));
+  line.setAttribute("fill", "none");
+  line.setAttribute("stroke", "#a3e635");
+  line.setAttribute("stroke-width", "2");
+  line.setAttribute("stroke-linejoin", "round");
+  line.setAttribute("stroke-linecap", "round");
+  const dot = document.createElementNS(svg.namespaceURI, "circle");
+  const last = pts[pts.length - 1];
+  dot.setAttribute("cx", last[0]); dot.setAttribute("cy", last[1]); dot.setAttribute("r", "2.6");
+  dot.setAttribute("fill", "#a3e635");
+  svg.append(area, line, dot);
+  return svg;
+}
+
+/* ── Render de paneles ──────────────────────────────────────── */
+const nf = new Intl.NumberFormat("es-AR");
+function fmtNum(v) { const n = Number(v); return isNaN(n) ? v : nf.format(n); }
+
+function renderVitales(data) {
+  const c = $("vitales");
+  $("vit-meta").textContent = data.actualizado ? "act. " + data.actualizado : "";
+  c.replaceChildren();
+  if (!data.metricas.length) {
+    warn(c, ["El archivo existe pero no tiene métricas (secciones ", b("##"), ")."]);
+    return;
+  }
+  for (const m of data.metricas) {
+    const row = el("div", "vital");
+    row.append(el("div", "label", m.nombre));
+    row.append(el("div", "num", fmtNum(m.actual)));
+    let deltaTxt = "sin historial", flat = true;
+    if (m.serie.length >= 2) {
+      const first = m.serie[0], last = m.serie[m.serie.length - 1];
+      const d = last - first;
+      const pct = first ? ((d / first) * 100).toFixed(1).replace(".", ",").replace(/,0$/, "") : "—";
+      deltaTxt = (d >= 0 ? "▲ +" : "▼ ") + nf.format(d) + " (" + (d >= 0 ? "+" : "") + pct + "%) · 7d";
+      flat = d === 0;
+    }
+    if (m.nota) deltaTxt += " · " + m.nota;
+    row.append(el("div", "delta" + (flat ? " flat" : ""), deltaTxt));
+    const spark = el("div", "spark");
+    spark.append(sparkline(m.serie));
+    row.append(spark);
+    c.append(row);
+  }
+}
+
+function renderAgenda(data) {
+  const c = $("agenda");
+  const mTit = (data.titulo.match(/\d{4}-\d{2}-\d{2}/) || [""])[0];
+  $("ag-meta").textContent = mTit;
+  c.replaceChildren();
+  if (!data.tareas.length) {
+    warn(c, ["Plan vacío — pedile a Claude: ", b("«armame el plan de hoy»"), " (skill plan)."]);
+    return;
+  }
+  const now = new Date();
+  const nowMin = now.getHours() * 60 + now.getMinutes();
+  const toMin = (h) => { const [a, b2] = h.split(":").map(Number); return a * 60 + b2; };
+  let nowIdx = -1;
+  data.tareas.forEach((t, i) => { if (t.hora && !t.done && toMin(t.hora) <= nowMin) nowIdx = i; });
+  if (nowIdx === -1) nowIdx = data.tareas.findIndex((t) => !t.done);
+  data.tareas.forEach((t, i) => {
+    const cls = ["task"];
+    if (t.done) cls.push("done");
+    if (i === nowIdx) cls.push("now");
+    else if (t.hora && toMin(t.hora) < nowMin) cls.push("past");
+    const row = el("div", cls.join(" "));
+    row.append(el("span", "hora", t.hora || "· ·"));
+    row.append(el("span", "txt", t.txt));
+    if (i === nowIdx) row.append(el("span", "tag", "◂ AHORA"));
+    c.append(row);
+  });
+}
+
+function renderComandos(data) {
+  const c = $("comandos");
+  $("cmd-meta").textContent = data.actualizado ? "act. " + data.actualizado : "";
+  c.replaceChildren();
+  if (!data.skills.length) {
+    warn(c, ["Sin skills registradas en ", b("estado-skills.md"), "."]);
+    return;
+  }
+  for (const s of data.skills) {
+    const run = s.estado.toLowerCase().startsWith("corr");
+    const row = el("div", "skill" + (run ? " run" : ""));
+    row.append(el("span", "dot"));
+    row.append(el("span", "name", s.nombre));
+    row.append(el("span", "st", s.estado));
+    const cnt = el("span", "count");
+    const bb = el("b", "", String(s.hoy));
+    cnt.append("hoy ", bb, "× · " + s.ultima);
+    row.append(cnt);
+    c.append(row);
+  }
+}
+
+function renderInbox(items) {
+  const c = $("inbox");
+  $("in-meta").textContent = items.length ? items.length + " partes" : "";
+  c.replaceChildren();
+  if (!items.length) {
+    warn(c, ["Inbox vacío — pedile a Claude: ", b("«revisá el inbox»"), " (skill inbox)."]);
+    return;
+  }
+  for (const it of items.slice(0, 5)) {
+    const box = el("div", "msg");
+    const head = el("div", "head");
+    if (it.hora) head.append(el("span", "hora", it.hora));
+    head.append(el("span", "title", it.titulo));
+    box.append(head);
+    if (it.cuerpo) box.append(el("div", "txt", it.cuerpo));
+    c.append(box);
+  }
+}
+
+function renderAudio(a) {
+  const esc = a.estado.toLowerCase().startsWith("escuch");
+  $("mic").classList.toggle("on", esc);
+  $("mic-st").textContent = esc ? "ESCUCHANDO" : a.estado === "—" ? "SIN DATOS" : "EN ESPERA";
+  $("io-in").textContent = a.transcripcion;
+  $("io-out").textContent = a.respuesta;
+}
+
+/* Estados de error visibles cuando falta el archivo fuente */
+const missing = {
+  metricas: () => warn($("vitales"), ["No encuentro ", b("vault/outputs/metricas.md"), " — corré la skill ", b("metricas"), " para poblar este panel."]),
+  plan:     () => warn($("agenda"),  ["No encuentro ", b("vault/outputs/plan.md"), " — corré la skill ", b("plan"), "."]),
+  inbox:    () => warn($("inbox"),   ["No encuentro ", b("vault/outputs/inbox.md"), " — corré la skill ", b("inbox"), "."]),
+  estado:   () => warn($("comandos"),["No encuentro ", b("vault/outputs/estado-skills.md"), "."]),
+  audio:    () => { $("mic").classList.remove("on"); $("mic-st").textContent = "SIN DATOS"; $("io-in").textContent = "—"; $("io-out").textContent = "vault/outputs/audio.md no encontrado"; },
+};
+
+/* ── Ciclo de actualización ─────────────────────────────────── */
+async function refresh() {
+  let okAlguno = false;
+  const jobs = [
+    ["metricas", parseMetricas, renderVitales],
+    ["plan", parsePlan, renderAgenda],
+    ["inbox", parseInbox, renderInbox],
+    ["estado", parseEstado, renderComandos],
+    ["audio", parseAudio, renderAudio],
+  ];
+  for (const [key, parse, render] of jobs) {
+    try {
+      const text = await readVaultFile(FILES[key]);
+      render(parse(text));
+      okAlguno = true;
+    } catch (e) {
+      missing[key]();
+    }
+  }
+  const modo = dirHandle ? "CARPETA LOCAL" : okAlguno ? "HTTP" : "SIN CONEXIÓN";
+  fuente = modo;
+  $("src").replaceChildren("FUENTE ", b(modo));
+  if (!okAlguno && !dirHandle && location.protocol === "file:") {
+    $("pick").style.display = "inline-block";
+    warn($("vitales"), [
+      "Abriste el HUD como archivo, así que el navegador no me deja leer el vault solo. ",
+      "Tocá ", b("ELEGIR CARPETA VAULT"), " acá arriba y elegí la carpeta ", b("vault"),
+      " — con eso alcanza (Chrome o Edge). ",
+      "La otra opción, si preferís terminal: ", b("./scripts/jarvis"), ".",
+    ]);
+  }
+}
+
+$("pick").addEventListener("click", async () => {
+  try {
+    dirHandle = await window.showDirectoryPicker();
+    try { dirHandle = await dirHandle.getDirectoryHandle("vault"); } catch (e) { /* eligió vault/ u outputs/ directo */ }
+    $("pick").style.display = "none";
+    refresh();
+  } catch (e) { /* canceló */ }
+});
+
+/* Reloj y fecha (franja de estado) */
+function tick() {
+  const now = new Date();
+  $("reloj").textContent = now.toLocaleTimeString("es-AR", { hour12: false });
+  $("fecha").textContent = now.toLocaleDateString("es-AR", { weekday: "long", day: "numeric", month: "long", year: "numeric" });
+}
+tick();
+setInterval(tick, 1000);
+refresh();
+setInterval(refresh, REFRESH_MS);
+</script>
+</body>
+</html>
