@@ -1,0 +1,10 @@
+# Estado local de Obsidian que no conviene sincronizar entre dispositivos
+.obsidian/workspace.json
+.obsidian/workspace-mobile.json
+.obsidian/cache/
+.trash/
+
+# Archivos de sistema
+.DS_Store
+Thumbs.db
+desktop.ini
