@@ -13,9 +13,9 @@ When the user says "copy", "vamos al copy", "dame un copy", or similar, generate
 
 [Optional: extra context paragraph with secondary details.]
 
-📰 Nota completa en estacionline.com
+Más información en estacionline.com
 
-#Hashtags #InCamelCase #SinAcentos
+#Cinco #Hashtags #Exactos #InCamelCase #SinAcentos
 ```
 
 ## Rules
@@ -25,8 +25,8 @@ When the user says "copy", "vamos al copy", "dame un copy", or similar, generate
 - **Quote directly** from the source article, in quotes
 - **No invention** — every fact must be in the source
 - **Length**: ~500-800 characters of body text, then hashtags
-- **Close with**: "Nota completa en estacionline.com" or similar CTA
-- **Hashtags**: 5-8, including:
+- **Close with**: exactly "Más información en estacionline.com" (rule from SKILL.md; it wins over any older example)
+- **Hashtags**: **exactly 5** (rule from SKILL.md), chosen among:
   - Geographic: #Rosario #SantaFe #SanLorenzo
   - Topic: #Política #Educación #Salud (whatever applies)
   - Names of protagonists if they have public profiles
@@ -54,9 +54,9 @@ If the angle isn't clear, propose three options to the user:
 >
 > Se entregaron 40 escrituras del Fonavi y 13 del programa de Regularización Dominial.
 >
-> 📰 Nota completa en estacionline.com
+> Más información en estacionline.com
 >
-> #DiStefano #Pullaro #SanLorenzo #SantaFe #UCR #Escrituras
+> #Pullaro #SanLorenzo #SantaFe #Escrituras #Vivienda
 
 ### Example C — Protagonist
 
@@ -66,6 +66,6 @@ If the angle isn't clear, propose three options to the user:
 >
 > Antes pasó por la Biblioteca Argentina y el despacho de la Intendencia. Sueña con tener su propio taller: "Quiero ser la patrona".
 >
-> Historia completa en estacionline.com
+> Más información en estacionline.com
 >
 > #HistoriasDeVida #Rosario #ElObrador #MuseoEstevez #MujeresQueInspiran

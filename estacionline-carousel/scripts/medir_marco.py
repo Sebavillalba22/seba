@@ -4,12 +4,12 @@ renderizada. Se usa para componer un video adentro con componer_video.sh.
 
   python3 medir_marco.py /ruta/slideN.html
 """
-import sys, asyncio
+import sys, asyncio, os
 from playwright.async_api import async_playwright
 
 async def main(html):
     async with async_playwright() as pw:
-        b = await pw.chromium.launch()
+        b = await pw.chromium.launch(executable_path=os.environ.get('PW_CHROMIUM') or None)
         pg = await b.new_page(viewport={'width': 1080, 'height': 1350}, device_scale_factor=1)
         await pg.goto('file://' + html); await pg.wait_for_timeout(500)
         r = await pg.evaluate("""()=>{const e=document.querySelector('.frame img');

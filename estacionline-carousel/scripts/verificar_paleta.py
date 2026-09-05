@@ -26,7 +26,10 @@ import re
 import sys
 import unicodedata
 
-# Hex PRIMARY de cada paleta — debe coincidir con PALETTES de build_template.py
+# Hex de cada paleta — deben coincidir con PALETTES de build_template.py.
+# La detección en el HTML usa BG_DARK, no PRIMARY: el gradiente de 5 stops de
+# `atardecer` contiene los PRIMARY de rojo, rosa y violáceo, y por PRIMARY
+# daba falso positivo. BG_DARK es único por paleta y va en `.slide`.
 PRIMARIES = {
     'violaceo':  '#A855F7',
     'verde':     '#A3C616',
@@ -35,6 +38,15 @@ PRIMARIES = {
     'atardecer': '#F97316',
     'ocre':      '#D4A53A',
     'rojo':      '#EF4444',
+}
+BG_DARKS = {
+    'violaceo':  '#0F0817',
+    'verde':     '#0F1008',
+    'rosa':      '#1A0814',
+    'acero':     '#0A1220',
+    'atardecer': '#1A0510',
+    'ocre':      '#14100A',
+    'rojo':      '#170707',
 }
 
 # Reglas por nivel. El primer nivel que matchea gana: un actor institucional
@@ -74,24 +86,35 @@ def _norm(s: str) -> str:
     return ''.join(c for c in s if unicodedata.category(c) != 'Mn')
 
 
-def deducir(tema: str) -> tuple[str | None, str, list[str]]:
-    """Devuelve (paleta, nivel_que_decidio, motivos)."""
+def deducir(tema: str, titular: str | None = None) -> tuple[str | None, str, list[str]]:
+    """Devuelve (paleta, nivel_que_decidio, motivos).
+
+    Si en un nivel empatan paletas distintas (Pullaro + Javkin en el mismo
+    acto, muy común), se desempata por quién es el SUJETO del titular:
+    se vuelven a aplicar las reglas de ese nivel sólo sobre `titular`.
+    """
     t = _norm(tema)
+    tit = _norm(titular) if titular else None
     for nivel, reglas in NIVELES:
         hits = [(pal, kw) for pal, kws in reglas for kw in kws if kw in t]
-        if hits:
-            pal = hits[0][0]
-            motivos = [f'"{kw}" → {p}' for p, kw in hits]
-            # Si en el mismo nivel matchean paletas distintas, no adivinamos.
-            if len({p for p, _ in hits}) > 1:
-                return None, nivel, motivos
-            return pal, nivel, motivos
+        if not hits:
+            continue
+        motivos = [f'"{kw}" → {p}' for p, kw in hits]
+        if len({p for p, _ in hits}) == 1:
+            return hits[0][0], nivel, motivos
+        # Empate en el nivel: el titular decide, si lo hay y no empata también.
+        if tit:
+            en_titular = [(pal, kw) for pal, kws in reglas for kw in kws if kw in tit]
+            if en_titular and len({p for p, _ in en_titular}) == 1:
+                motivos.append(f'empate → desempata el titular: "{en_titular[0][1]}"')
+                return en_titular[0][0], f'{nivel} (titular)', motivos
+        return None, nivel, motivos
     return None, 'ninguno', []
 
 
 def paleta_en_html(carpeta: str) -> tuple[dict[str, str], list[str]]:
-    """Mapea slide -> paleta detectada leyendo el PRIMARY que quedó en el HTML."""
-    por_hex = {v.lower(): k for k, v in PRIMARIES.items()}
+    """Mapea slide -> paleta detectada leyendo el BG_DARK que quedó en el HTML."""
+    por_hex = {v.lower(): k for k, v in BG_DARKS.items()}
     detectado, sin_pista = {}, []
     archivos = sorted(glob.glob(os.path.join(carpeta, 'slide*.html')),
                       key=lambda f: int(''.join(c for c in os.path.basename(f) if c.isdigit()) or 0))
@@ -112,6 +135,8 @@ def paleta_en_html(carpeta: str) -> tuple[dict[str, str], list[str]]:
 def main() -> int:
     ap = argparse.ArgumentParser(description='Verifica que la paleta corresponda al tema y al build.')
     ap.add_argument('--tema', help='Titular / resumen / actores de la nota.')
+    ap.add_argument('--titular', help='Sólo el título. Desempata cuando dos actores '
+                                       'institucionales comparten el acto (Pullaro + Javkin).')
     ap.add_argument('--paleta', help='La paleta elegida para la pieza.')
     ap.add_argument('--dir', help='Carpeta con los slide*.html ya generados.')
     a = ap.parse_args()
@@ -126,14 +151,15 @@ def main() -> int:
     sugerida = None
 
     if a.tema:
-        sugerida, nivel, motivos = deducir(a.tema)
+        sugerida, nivel, motivos = deducir(a.tema, a.titular)
         print('── tema ' + '─' * 52)
         for m in motivos:
             print(f'   {m}')
         if sugerida:
             print(f'   → decide el nivel "{nivel}": \033[1m{sugerida}\033[0m')
         elif motivos:
-            print(f'   ✗ empate dentro del nivel "{nivel}": elegila a mano y justificala')
+            print(f'   ✗ empate dentro del nivel "{nivel}": pasá --titular "..." '
+                  f'para desempatar por el sujeto del título, o elegila a mano y justificala')
             fallas.append('tema ambiguo')
         else:
             print('   ? ninguna keyword conocida; elegila a mano')
@@ -155,7 +181,7 @@ def main() -> int:
             if esperada and pal != esperada:
                 fallas.append(f'{slide} pintado en {pal}')
         for slide in sin_pista:
-            print(f'   ? {slide}: sin PRIMARY reconocible')
+            print(f'   ? {slide}: sin BG_DARK reconocible')
         distintas = {p for p in detectado.values()}
         if len(distintas) > 1:
             print(f'   ✗ los slides no comparten paleta: {", ".join(sorted(distintas))}')

@@ -4,10 +4,10 @@ async def main(carpeta):
     archivos = sorted(glob.glob(os.path.join(carpeta,'slide*.html')),
                       key=lambda f: int(''.join(c for c in os.path.basename(f) if c.isdigit())))
     async with async_playwright() as pw:
-        b = await pw.chromium.launch()
+        b = await pw.chromium.launch(executable_path=os.environ.get('PW_CHROMIUM') or None)
         pg = await b.new_page(viewport={'width':1080,'height':1350})
         for f in archivos:
-            await pg.goto('file://'+f); await pg.wait_for_timeout(400)
+            await pg.goto('file://'+os.path.abspath(f)); await pg.wait_for_timeout(400)
             r = await pg.evaluate("""()=>{
                 const sel=['.list-wrap','.cover-content','.quote-wrap','.num-wrap','.close-wrap','.content'];
                 for (const s of sel){ const e=document.querySelector(s); if(!e) continue;

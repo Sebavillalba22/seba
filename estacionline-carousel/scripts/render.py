@@ -13,7 +13,7 @@ CRITICAL: waits for all images AND fonts to load before screenshot.
 - Skipping the font wait causes screenshots with the fallback font instead
   of Inter (different letter-spacing/weights = "broken" design).
 """
-import asyncio
+import asyncio, os
 import sys
 from pathlib import Path
 from playwright.async_api import async_playwright
@@ -32,7 +32,7 @@ async def render_dir(work_dir: str):
         return
 
     async with async_playwright() as p:
-        browser = await p.chromium.launch()
+        browser = await p.chromium.launch(executable_path=os.environ.get('PW_CHROMIUM') or None)
         ctx = await browser.new_context(
             viewport={'width': 1080, 'height': 1350},
             device_scale_factor=2

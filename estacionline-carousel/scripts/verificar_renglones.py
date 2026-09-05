@@ -1,10 +1,10 @@
-import sys, asyncio
+import sys, asyncio, os
 from playwright.async_api import async_playwright
 async def main(path, sel='.cover-title'):
     async with async_playwright() as pw:
-        b = await pw.chromium.launch()
+        b = await pw.chromium.launch(executable_path=os.environ.get('PW_CHROMIUM') or None)
         pg = await b.new_page(viewport={'width':1080,'height':1350})
-        await pg.goto('file://'+path)
+        await pg.goto('file://'+os.path.abspath(path))
         await pg.wait_for_timeout(600)
         r = await pg.evaluate("""(sel)=>{const e=document.querySelector(sel);
             if(!e) return null;
