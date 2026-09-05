@@ -1,0 +1,64 @@
+[
+  {
+    "label": "<LABEL>",
+    "days": [
+      "<DAYS>",
+      "<DAYS>"
+    ],
+    "time": "<TIME>",
+    "media_type": "<MEDIA_TYPE>",
+    "media": [
+      "<MEDIA>",
+      "<MEDIA>"
+    ]
+  },
+  {
+    "label": "<LABEL>",
+    "days": [
+      "<DAYS>",
+      "<DAYS>"
+    ],
+    "time": "<TIME>",
+    "media_type": "<MEDIA_TYPE>",
+    "media": [
+      "<MEDIA>"
+    ]
+  },
+  {
+    "label": "<LABEL>",
+    "days": [
+      "<DAYS>",
+      "<DAYS>"
+    ],
+    "time": "<TIME>",
+    "media_type": "<MEDIA_TYPE>",
+    "media": [
+      "<MEDIA>",
+      "<MEDIA>"
+    ]
+  },
+  {
+    "label": "<LABEL>",
+    "days": [
+      "<DAYS>",
+      "<DAYS>"
+    ],
+    "time": "<TIME>",
+    "media_type": "<MEDIA_TYPE>",
+    "media": [
+      "<MEDIA>"
+    ]
+  },
+  {
+    "label": "<LABEL>",
+    "days": [
+      "<DAYS>",
+      "<DAYS>"
+    ],
+    "time": "<TIME>",
+    "media_type": "<MEDIA_TYPE>",
+    "media": [
+      "<MEDIA>"
+    ]
+  }
+]

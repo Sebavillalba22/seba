@@ -1,0 +1,13 @@
+{
+  "client_key": "<CLIENT_KEY>",
+  "client_secret": "<CLIENT_SECRET>",
+  "app_id": "<APP_ID>",
+  "redirect_uri": "<REDIRECT_URI>",
+  "sandbox_client_key": "<SANDBOX_CLIENT_KEY>",
+  "sandbox_client_secret": "<SANDBOX_CLIENT_SECRET>",
+  "sandbox_id": "<SANDBOX_ID>",
+  "access_token": "<ACCESS_TOKEN>",
+  "refresh_token": "<REFRESH_TOKEN>",
+  "open_id": "<OPEN_ID>",
+  "use_sandbox": "<USE_SANDBOX>"
+}

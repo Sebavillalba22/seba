@@ -166,8 +166,14 @@ de la app **Estacionline Poster** (App ID 1586763299463861) con los permisos
 - `scripts/fb_repost_ig.py` — repostear en FB un post ya publicado en IG (`--latest`, `--permalink`, `--media-id`). Sin álbum.
 - `scripts/ig_publish.py` — publicar en Instagram (foto o carrusel). `--repost-fb` repostea en FB. `--check`, `--dry-run`.
 - `scripts/x_publish.py` — publicar en X/Twitter (texto + link). `--check`.
+- `scripts/ig_fetch.py` — leer posteos ya publicados en Instagram (para repostear o verificar).
+- `scripts/linkedin_publish.py` / `scripts/linkedin_refresh.py` — publicar en LinkedIn y renovar su `refresh_token`. Credenciales en `linkedin.json`.
+- `scripts/tiktok_publish.py` — subir video a TikTok. Credenciales en `tiktok.json`.
+- `scripts/youtube_publish.py` — subir video a YouTube. Credenciales en `youtube.json`.
+- `scripts/wp_publish.py` — publicar en WordPress (estacionline.com). Credenciales en `wordpress.json`.
 - `scripts/setup_token.py`, `scripts/token_bridge.py` — regenerar tokens (Meta).
 - `.credentials.json` — página FB por defecto (Estacionline). **SECRETO.**
 - `pages.json` — las 4 páginas de FB con sus tokens. **SECRETO.**
 - `instagram.json` — ig_user_id + token de IG. **SECRETO.**
 - `x_credentials.json` — claves OAuth 1.0a de X. **SECRETO.**
+- `app.json`, `linkedin.json`, `tiktok.json`, `youtube.json`, `wordpress.json` — credenciales de las demás plataformas. **SECRETO.** Formato en los `*.example.json`.

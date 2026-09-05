@@ -1,0 +1,9 @@
+{
+  "client_id": "<CLIENT_ID>",
+  "client_secret": "<CLIENT_SECRET>",
+  "access_token": "<ACCESS_TOKEN>",
+  "refresh_token": "<REFRESH_TOKEN>",
+  "org_id": "<ORG_ID>",
+  "org_urn": "<ORG_URN>",
+  "redirect_uri": "<REDIRECT_URI>"
+}

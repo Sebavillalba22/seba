@@ -1,6 +1,6 @@
 ---
 name: facebook-publish
-description: Publish posts to a Facebook Page (fan page) via the Meta Graph API — text, photos, multi-photo posts (IG-carousel reposts), and link shares. Use whenever the user asks to "publicar en Facebook", "subir a la fan page", "postear en la página", "repostear el carrusel de Instagram en Facebook", share a note/photo on the Facebook page, or push content to Facebook. Stdlib-only Python, no dependencies.
+description: Publica en las redes de Estacionline y en WordPress desde un solo lugar: Facebook (fan page), Instagram, LinkedIn, TikTok, X, YouTube y el sitio. Texto, fotos, posteos con varias fotos (repost de carruseles de IG), videos y enlaces con vista previa. Usar cuando el usuario pida "publicar en Facebook", "subir a la fan page", "postear en la pagina", "repostear el carrusel de Instagram en Facebook", "subir a LinkedIn", "publicar en TikTok", "subir un video a YouTube", "publicar en X", o compartir una nota o foto en cualquiera de las redes. Solo Python de la biblioteca estandar, sin dependencias.
 ---
 
 # facebook-publish
@@ -15,6 +15,36 @@ Soporta texto, foto (archivo local o URL), varias fotos en un solo posteo
 - "reposteá el carrusel de Instagram en Facebook"
 - Compartir una nota de estacionline u otra URL en la Página
 - Subir una foto (o varias) con epígrafe a la Página
+
+## Las otras plataformas
+
+Ademas de Facebook, esta skill publica en:
+
+| Script | Plataforma | Credenciales |
+|---|---|---|
+| `scripts/ig_publish.py` | Instagram (fotos, carruseles) | `instagram.json` |
+| `scripts/ig_story.py` | Instagram (historias) | `instagram.json` |
+| `scripts/ig_fetch.py` | Instagram (leer posteos publicados) | `instagram.json` |
+| `scripts/linkedin_publish.py` | LinkedIn | `linkedin.json` |
+| `scripts/tiktok_publish.py` | TikTok | `tiktok.json` |
+| `scripts/youtube_publish.py` | YouTube | `youtube.json` |
+| `scripts/x_publish.py` | X | `x_credentials.json` |
+| `scripts/wp_publish.py` | WordPress | `wordpress.json` |
+
+Para varias paginas de Facebook a la vez:
+
+```bash
+scripts/publish_to.py --list                       # ver las configuradas
+scripts/publish_to.py --page <nombre> --check      # probar sin publicar
+scripts/publish_to.py --page <nombre> -m "texto" -l "https://..."
+```
+
+`pages.json` es un diccionario `{ page_id: { name, access_token } }`. Cada
+pagina necesita **su propio** token: el de una pagina no sirve para otra,
+aunque seas admin de las dos.
+
+El `refresh_token` de LinkedIn se renueva con `scripts/linkedin_refresh.py`.
+
 
 ## Setup de credenciales (una sola vez)
 

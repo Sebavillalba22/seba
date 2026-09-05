@@ -1,7 +1,11 @@
-# Tokens secretos — NUNCA commitear (ver *.example.json para el formato)
 .credentials.json
 pages.json
 instagram.json
 x_credentials.json
+app.json
+linkedin.json
+tiktok.json
+youtube.json
+wordpress.json
 __pycache__/
 *.pyc
