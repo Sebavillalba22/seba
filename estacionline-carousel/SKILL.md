@@ -189,6 +189,27 @@ portada · cita · número grande · foto enmarcada · lista · filas · texto �
 | Volantas | 28 |
 | Crédito de foto | 23 |
 
+### Estos valores son a propósito más grandes que los del template viejo
+
+El template anterior (el de la skill previa a la unificación) usaba el texto
+secundario más chico. La subida fue una **decisión deliberada**, no un bug —
+si te parece que "el kit agranda las fuentes", sí, las agranda, y así queda:
+
+| Elemento | Antes | Ahora |
+|---|---|---|
+| `.bajada` | 28 | **34** |
+| `.cover-sub` (bajada de portada) | 28 | **32** |
+| `.item-body p` (desc. de ítem) | 24 | **30** |
+| `.item-body h3` (título de ítem) | 38 | **42** |
+| `.eyebrow` / `.list-eyebrow` (volantas) | 26 | **28** |
+| `.num-unit` | 56 | **58** |
+| `.wordmark .brand` | 28 (zócalo abajo) | **52** (arriba a la derecha) |
+
+**No los bajes** porque una pieza vieja se vea distinta. El wordmark de 52px
+es el cambio de mayo 2026; el resto es legibilidad en celular. Si una bajada
+no entra, se corta el texto, no la tipografía.
+
+
 ---
 
 ## Reglas editoriales
